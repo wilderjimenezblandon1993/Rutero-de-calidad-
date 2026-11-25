@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rutero de Verificación de Proceso y Calidad en Planta - Colombina</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            colombina: {
+              navy: '#1E3278',
+              dark: '#142254',
+              red: '#D91B24',
+              gold: '#F59E0B',
+              soft: '#F4F6FB'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .touch-btn { min-height: 44px; touch-action: manipulation; }
+    #signatureCanvas { touch-action: none; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff !important; }
+    }
+  </style>
+</head>
+<body class="bg-colombina-soft text-slate-800 min-h-screen pb-16">
+
+  <!-- Toast Notification -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- Custom Modal -->
+  <div id="customModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div id="customModalBox" class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+      <div id="customModalHeader" class="px-5 py-4 bg-colombina-navy text-white flex items-center justify-between">
+        <h3 id="customModalTitle" class="font-bold text-base sm:text-lg"></h3>
+        <button id="customModalCloseBtn" type="button" class="text-white/80 hover:text-white text-xl font-bold px-2 py-1 rounded-lg">✕</button>
+      </div>
+      <div id="customModalBody" class="p-5 overflow-y-auto text-sm text-slate-700 space-y-4"></div>
+      <div id="customModalFooter" class="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-end gap-2"></div>
+    </div>
+  </div>
+
+  <!-- Encabezado Corporativo -->
+  <header class="bg-colombina-navy text-white shadow-md sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3.5">
+        <!-- Logo SVG Colombina -->
+        <div class="bg-white rounded-xl px-2.5 py-1.5 shadow-sm shrink-0 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" class="h-10 sm:h-12 w-auto" role="img" aria-label="Logo Colombina">
+            <path d="M14 26 Q130 4 244 22 L236 68 Q126 52 18 82 Z" fill="#1E3278"/>
+            <text x="27" y="61" fill="#FFFFFF" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="bold" font-size="37" letter-spacing="-0.5">Colombina</text>
+            <polygon points="169,20 173,26 169,32 165,26" fill="#FFFFFF"/>
+            <circle cx="28" cy="73" r="5.5" fill="none" stroke="#FFFFFF" stroke-width="1.3"/>
+            <text x="25.5" y="75.5" fill="#FFFFFF" font-family="Arial, sans-serif" font-weight="bold" font-size="7.5">R</text>
+            <polygon points="278,6 312,46 278,86 244,46" fill="#FFFFFF"/>
+            <polygon points="278,10 308,46 278,82 248,46" fill="#1E3278"/>
+            <path d="M261 48 A19 19 0 1 0 294 58 A15.5 15.5 0 1 1 261 48 Z" fill="#FFFFFF"/>
+            <circle cx="284" cy="31" r="3.4" fill="#FFFFFF"/>
+            <path d="M281.5 30.5 Q278 28 276.5 31 Q278.5 32 281.5 32.5 Z" fill="#FFFFFF"/>
+            <path d="M283.5 34.5 L281 42 L288 45 L286 48 L277 45 L280 35 Z" fill="#FFFFFF"/>
+            <path d="M279 44 L272 52 L274.5 54 L281.5 46.5 Z" fill="#FFFFFF"/>
+            <path d="M287.5 46.5 L289 55 L292 54.5 L290.5 46 Z" fill="#FFFFFF"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-lg font-extrabold tracking-wide leading-tight">
+            RUTERO DE VERIFICACIÓN DE PROCESO Y CALIDAD EN PLANTA
+          </h1>
+          <p class="text-xs text-blue-100 mt-0.5">
+            Control de inocuidad, BPM y parámetros operativos en tiempo real
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnHistorial" type="button" class="touch-btn bg-white/15 hover:bg-white/25 text-white border border-white/25 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
+          <span>🕒</span>
+          <span>Historial de Turnos</span>
+          <span id="historialBadge" class="bg-colombina-gold text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+        </button>
+        <button id="btnNuevoTurno" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 py-5 space-y-6">
+
+    <!-- SECCIÓN 1: Identificación del Turno -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h2 class="text-base sm:text-lg font-bold text-colombina-navy flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-colombina-navy text-white text-sm flex items-center justify-center font-bold">1</span>
+          Identificación del Turno
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="responsableSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+            Responsable / Verificador
+          </label>
+          <select id="responsableSelect" class="touch-btn w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy focus:ring-2 focus:ring-colombina-navy/20 px-3.5 py-2.5 text-sm font-medium outline-none">
+            <option value="">Seleccione un responsable...</option>
+            <option value="59762 - Juan Camilo Escobar">59762 - Juan Camilo Escobar</option>
+            <option value="43834 - Figueroa Santos Omar Andres">43834 - Figueroa Santos Omar Andres</option>
+            <option value="76343 - Sandra Daniela Villa">76343 - Sandra Daniela Villa</option>
+            <option value="58139 - Karen Florez">58139 - Karen Florez</option>
+            <option value="78595 - Sebastian Romero">78595 - Sebastian Romero</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="fechaInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+            Fecha
+          </label>
+          <input id="fechaInput" type="date" class="touch-btn w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy focus:ring-2 focus:ring-colombina-navy/20 px-3.5 py-2.5 text-sm font-medium outline-none" />
+        </div>
+
+        <div>
+          <label for="turnoSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+            Turno
+          </label>
+          <select id="turnoSelect" class="touch-btn w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy focus:ring-2 focus:ring-colombina-navy/20 px-3.5 py-2.5 text-sm font-medium outline-none">
+            <option value="Turno 1 (Nocturno)">Turno 1 (Nocturno)</option>
+            <option value="Turno 2 (Diurno)">Turno 2 (Diurno)</option>
+            <option value="Turno 3 (Tarde)">Turno 3 (Tarde)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: Novedades Relevantes, Seguridad e Inocuidad del Turno -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h2 class="text-base sm:text-lg font-bold text-colombina-navy flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-colombina-navy text-white text-sm flex items-center justify-center font-bold">2</span>
+          Novedades Relevantes, Seguridad e Inocuidad del Turno
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div id="seguridadBox" class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3 transition">
+          <div>
+            <label for="incidenteSeguridadSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              ¿Incidentes de seguridad?
+            </label>
+            <select id="incidenteSeguridadSelect" class="touch-btn w-full rounded-xl border border-slate-300 bg-white focus:border-colombina-navy px-3.5 py-2.5 text-sm font-medium outline-none">
+              <option value="Sin novedad">Sin novedad</option>
+              <option value="Derrame de producto">Derrame de producto</option>
+              <option value="Caída de objetos">Caída de objetos</option>
+              <option value="Golpes">Golpes</option>
+              <option value="Caída de personas">Caída de personas</option>
+              <option value="Otro (Especificar en detalle)">Otro (Especificar en detalle)</option>
+            </select>
+          </div>
+          <div>
+            <label id="seguridadExplicacionLabel" for="seguridadExplicacionInput" class="block text-xs font-bold text-slate-600 mb-1">
+              Explicación de lo sucedido
+            </label>
+            <textarea id="seguridadExplicacionInput" rows="2" placeholder="Detalle qué ocurrió, ubicación y acción inmediata..." class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none transition"></textarea>
+            <p id="seguridadErrorMsg" class="hidden text-xs font-semibold text-red-600 mt-1">
+              Campo obligatorio cuando se reporta un incidente de seguridad diferente de "Sin novedad".
+            </p>
+          </div>
+        </div>
+
+        <div id="calidadBox" class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3 transition">
+          <div>
+            <label for="casiIncidenteCalidadSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              ¿Casi incidentes de calidad?
+            </label>
+            <select id="casiIncidenteCalidadSelect" class="touch-btn w-full rounded-xl border border-slate-300 bg-white focus:border-colombina-navy px-3.5 py-2.5 text-sm font-medium outline-none">
+              <option value="Sin novedad">Sin novedad</option>
+              <option value="Contaminación química">Contaminación química</option>
+              <option value="Contaminación física">Contaminación física</option>
+              <option value="Contaminación microbiológica">Contaminación microbiológica</option>
+              <option value="Sobredosificación">Sobredosificación</option>
+              <option value="Otro (Especificar en detalle)">Otro (Especificar en detalle)</option>
+            </select>
+          </div>
+          <div>
+            <label for="calidadExplicacionInput" class="block text-xs font-bold text-slate-600 mb-1">
+              Explicación de lo sucedido
+            </label>
+            <textarea id="calidadExplicacionInput" rows="2" placeholder="Detalle el casi incidente de calidad y contención aplicada..." class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none transition"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label for="novedadesTurnoInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+          Novedades relevantes del turno
+        </label>
+        <textarea id="novedadesTurnoInput" rows="2" placeholder="Registre cambios de referencia, arranques, paradas de línea o novedades operativas..." class="w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy px-3.5 py-2.5 text-sm outline-none"></textarea>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: Lista de Verificación (12 Bloques y 82 Ítems exactos) -->
+    <section class="space-y-4">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-base sm:text-lg font-bold text-colombina-navy flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-colombina-navy text-white text-sm flex items-center justify-center font-bold">3</span>
+          Lista de Verificación (12 Bloques · 82 Ítems)
+        </h2>
+        <div class="text-xs text-slate-500 font-medium">
+          Áreas inactivas inician en <span class="font-bold text-slate-700">No aplica</span>. Cambie a <span class="font-bold text-emerald-700">Sí</span> para evaluar.
+        </div>
+      </div>
+
+      <div id="bloquesContainer" class="space-y-4"></div>
+    </section>
+
+    <!-- SECCIÓN 4: Indicadores en Vivo, Firma y Doble Exportación -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
+      <div class="border-b border-slate-100 pb-3">
+        <h2 class="text-base sm:text-lg font-bold text-colombina-navy flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-colombina-navy text-white text-sm flex items-center justify-center font-bold">4</span>
+          Indicadores en Vivo, Firma y Exportación
+        </h2>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Aplicables Evaluados</div>
+          <div id="kpiEvaluados" class="text-2xl font-extrabold text-slate-800 mt-1">0</div>
+          <div id="kpiEvaluadosSub" class="text-[11px] text-slate-500 mt-0.5">de 0 aplicables</div>
+        </div>
+
+        <div id="kpiCumplenCard" class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Cumplen (% vs meta ≥ 95%)</div>
+          <div id="kpiCumplenPct" class="text-2xl font-extrabold text-emerald-700 mt-1">0.0%</div>
+          <div id="kpiCumplenCount" class="text-[11px] font-semibold text-emerald-800 mt-0.5">0 cumplen · Meta ≥ 95%</div>
+        </div>
+
+        <div class="rounded-xl border border-red-200 bg-red-50/70 p-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-red-800">No Cumplen</div>
+          <div id="kpiNoCumplen" class="text-2xl font-extrabold text-red-700 mt-1">0</div>
+          <div class="text-[11px] text-red-700 mt-0.5">Requieren acción correctiva</div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-slate-100 p-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-600">N/A</div>
+          <div id="kpiNA" class="text-2xl font-extrabold text-slate-700 mt-1">72</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">No aplican</div>
+        </div>
+
+        <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 col-span-2 sm:col-span-1">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">Pendientes</div>
+          <div id="kpiPendientes" class="text-2xl font-extrabold text-amber-700 mt-1">10</div>
+          <div class="text-[11px] text-amber-800 mt-0.5">Por marcar en aplicables</div>
+        </div>
+      </div>
+
+      <!-- Firma Verificador de Calidad -->
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Firma Verificador de Calidad</h3>
+            <p class="text-xs text-slate-600 mt-0.5">
+              Verificación realizada conforme al procedimiento <span class="font-bold text-colombina-navy">F1345-1346</span>.
+            </p>
+          </div>
+          <button id="btnLimpiarFirma" type="button" class="touch-btn px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-xs font-bold text-slate-700 transition">
+            Limpiar firma
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border-2 border-dashed border-slate-300 overflow-hidden">
+          <canvas id="signatureCanvas" class="w-full h-40 block cursor-crosshair"></canvas>
+        </div>
+      </div>
+
+      <!-- Botones de Acción y Exportación -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <button id="btnGuardarHistorial" type="button" class="touch-btn bg-colombina-navy hover:bg-colombina-dark text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+          <span>💾</span>
+          <span>Guardar en Historial</span>
+        </button>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="btnExportExcelInicial" type="button" class="touch-btn bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+            <span>📊</span>
+            <span>Excel Formato Inicial (.xls)</span>
+          </button>
+
+          <button id="btnReporteGerencial" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+            <span>📈</span>
+            <span>Reporte Gerencial (Tabla)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const STORAGE_KEY = "colombina_rutero_historial_v1";
+
+      const BLOCKS_CONFIG = [
+        {
+          id: "general_bpm",
+          name: "GENERAL Y BPM",
+          alwaysActive: true,
+          items: [
+            { code: "GEN-01", desc: "Exclusa sanitaria (abastecimiento químicos, lavabotas y uso)" },
+            { code: "GEN-02", desc: "Aspersión (frecuencia, sustancia y registro)" },
+            { code: "GEN-03", desc: "Aleatorio BPM personal (mín. 3 personas)" },
+            { code: "GEN-04", desc: "Pesaje micro ingredientes (2 baches + nombre formulador)" },
+            { code: "GEN-05", desc: "Pesaje macro ingredientes (2 baches + nombre formulador)" },
+            { code: "GEN-06", desc: "Proceso vs. instructivos" },
+            { code: "GEN-07", desc: "Almacenamiento MP frías (ej. huevo, pulpa de limón)" },
+            { code: "GEN-08", desc: "Almacenamiento MP secas" },
+            { code: "GEN-09", desc: "Condiciones inocuidad (cárcamos, plagas)" },
+            { code: "GEN-10", desc: "Disposición de residuos" }
+          ]
+        },
+        {
+          id: "sector_1",
+          name: "SECTOR 1",
+          alwaysActive: false,
+          items: [
+            { code: "S1-01", desc: "Producto en fabricación" },
+            { code: "S1-02", desc: "Limpieza y orden (5S)" },
+            { code: "S1-03", desc: "Material extraño" },
+            { code: "S1-04", desc: "PCC y PPRO (funcionamiento, efectividad, ubicación y firmas)" },
+            { code: "S1-05", desc: "Ferro filtro" },
+            { code: "S1-06", desc: "Temperatura (°C)" },
+            { code: "S1-07", desc: "Acidez / pH" }
+          ]
+        },
+        ...[2, 3, 4, 5, 6].map((num) => ({
+          id: `sector_${num}`,
+          name: `SECTOR ${num}`,
+          alwaysActive: false,
+          items: [
+            { code: `S${num}-01`, desc: "Limpieza y orden (5S)" },
+            { code: `S${num}-02`, desc: "Material extraño" },
+            { code: `S${num}-03`, desc: "PCC y PPRO (funcionamiento, efectividad y ubicación)" },
+            { code: `S${num}-04`, desc: "Ferro filtro" },
+            { code: `S${num}-05`, desc: "Temperatura (°C)" },
+            { code: `S${num}-06`, desc: "Acidez / pH" }
+          ]
+        })),
+        ...[
+          { id: "sector_7_brevas", name: "SECTOR 7 (BREVAS)", prefix: "S7B" },
+          { id: "centro_acopio", name: "CENTRO DE ACOPIO", prefix: "ACO" },
+          { id: "encurtidos", name: "ENCURTIDOS", prefix: "ENC" },
+          { id: "deshidratado", name: "DESHIDRATADO", prefix: "DES" },
+          { id: "aji_industrial", name: "AJÍ INDUSTRIAL", prefix: "AJI" }
+        ].map((area) => ({
+          id: area.id,
+          name: area.name,
+          alwaysActive: false,
+          items: [
+            { code: `${area.prefix}-01`, desc: "Limpieza y orden (5S)" },
+            { code: `${area.prefix}-02`, desc: "Material extraño" },
+            { code: `${area.prefix}-03`, desc: "PCC y PPRO (funcionamiento, efectividad y ubicación)" },
+            { code: `${area.prefix}-04`, desc: "Ferro filtro" },
+            { code: `${area.prefix}-05`, desc: "Temperatura (°C)" },
+            { code: `${area.prefix}-06`, desc: "Acidez / pH" },
+            { code: `${area.prefix}-07`, desc: "Control de Detector de Rayos X (patrones de prueba y rechazo)" }
+          ]
+        }))
+      ];
+
+      const state = {
+        blocks: {}
+      };
+
+      function getTodayISO() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      function getCurrentHHMM() {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      }
+
+      function initState() {
+        BLOCKS_CONFIG.forEach((block) => {
+          const active = Boolean(block.alwaysActive);
+          const itemsMap = {};
+          block.items.forEach((item) => {
+            itemsMap[item.code] = {
+              status: active ? "" : "na",
+              time: "",
+              measuredValue: "",
+              photoDataUrl: "",
+              correctiveAction: ""
+            };
+          });
+          state.blocks[block.id] = {
+            active,
+            items: itemsMap
+          };
+        });
+      }
+
+      function showToast(message, type = "info") {
+        const container = document.getElementById("toastContainer");
+        const colorMap = {
+          success: "bg-emerald-700 text-white border-emerald-800",
+          error: "bg-red-700 text-white border-red-800",
+          warning: "bg-amber-600 text-white border-amber-700",
+          info: "bg-colombina-navy text-white border-colombina-dark"
+        };
+        const toast = document.createElement("div");
+        toast.className = `pointer-events-auto rounded-xl border px-4 py-3 text-xs sm:text-sm font-semibold shadow-lg transition transform duration-200 ${colorMap[type] || colorMap.info}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add("opacity-0", "translate-y-1");
+          setTimeout(() => toast.remove(), 220);
+        }, 3200);
+      }
+
+      function openModal({ title, bodyHtml, buttons = [] }) {
+        const modal = document.getElementById("customModal");
+        const titleEl = document.getElementById("customModalTitle");
+        const bodyEl = document.getElementById("customModalBody");
+        const footerEl = document.getElementById("customModalFooter");
+
+        titleEl.textContent = title;
+        bodyEl.innerHTML = bodyHtml;
+        footerEl.innerHTML = "";
+
+        buttons.forEach((btn) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = btn.className || "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800";
+          b.textContent = btn.label;
+          b.addEventListener("click", () => {
+            if (btn.onClick) btn.onClick();
+            if (btn.closeOnClick !== false) closeModal();
+          });
+          footerEl.appendChild(b);
+        });
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function closeModal() {
+        const modal = document.getElementById("customModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function compressImageFile(file, maxWidth = 900, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+              const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+              const canvas = document.createElement("canvas");
+              canvas.width = Math.round(img.width * scale);
+              canvas.height = Math.round(img.height * scale);
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              resolve(canvas.toDataURL("image/jpeg", quality));
+            };
+            img.onerror = reject;
+            img.src = ev.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function renderBlocks() {
+        const container = document.getElementById("bloquesContainer");
+        container.innerHTML = "";
+
+        BLOCKS_CONFIG.forEach((block) => {
+          const bState = state.blocks[block.id];
+          const isOpen = bState.active;
+
+          const card = document.createElement("div");
+          card.className = "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden";
+
+          const header = document.createElement("div");
+          header.className = "px-4 sm:px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3";
+
+          const leftInfo = document.createElement("div");
+          leftInfo.className = "flex items-center gap-2.5";
+          leftInfo.innerHTML = `
+            <span class="font-extrabold text-sm sm:text-base text-colombina-navy">${escapeHtml(block.name)}</span>
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${isOpen ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}">
+              ${block.items.length} ítems · ${isOpen ? "En operación" : "No aplica"}
+            </span>
+          `;
+
+          header.appendChild(leftInfo);
+
+          if (!block.alwaysActive) {
+            const rightControl = document.createElement("div");
+            rightControl.className = "flex items-center gap-2";
+            rightControl.innerHTML = `
+              <label for="op_${block.id}" class="text-xs font-bold text-slate-700">¿Área en operación?</label>
+              <select id="op_${block.id}" data-block-id="${block.id}" class="area-op-select touch-btn rounded-xl border ${isOpen ? "border-emerald-500 bg-emerald-50 text-emerald-900" : "border-slate-300 bg-white text-slate-700"} px-3 py-1.5 text-xs font-bold outline-none">
+                <option value="No" ${!isOpen ? "selected" : ""}>No</option>
+                <option value="Sí" ${isOpen ? "selected" : ""}>Sí</option>
+              </select>
+            `;
+            header.appendChild(rightControl);
+          } else {
+            const badge = document.createElement("span");
+            badge.className = "text-xs font-bold text-colombina-navy bg-blue-50 border border-blue-200 px-3 py-1 rounded-full";
+            badge.textContent = "Siempre activo";
+            header.appendChild(badge);
+          }
+
+          card.appendChild(header);
+
+          if (isOpen) {
+            const listWrap = document.createElement("div");
+            listWrap.className = "divide-y divide-slate-200";
+
+            block.items.forEach((item) => {
+              const iState = bState.items[item.code];
+              const isNoCumple = iState.status === "no_cumple";
+              const missingAction = isNoCumple && !iState.correctiveAction.trim();
+
+              const row = document.createElement("div");
+              row.className = `p-4 sm:p-5 transition ${isNoCumple ? "bg-red-50/40" : "bg-white"}`;
+
+              row.innerHTML = `
+                <div class="flex flex-col gap-3.5">
+                  <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="space-y-0.5 max-w-3xl">
+                      <div class="flex items-center gap-2">
+                        <span class="inline-block font-mono text-xs font-extrabold bg-colombina-navy text-white px-2 py-0.5 rounded-md">${escapeHtml(item.code)}</span>
+                        <span class="text-sm font-bold text-slate-800">${escapeHtml(item.desc)}</span>
+                      </div>
+                    </div>
+
+                    <!-- Hora + Botón Reloj -->
+                    <div class="flex items-center gap-1.5">
+                      <input type="time" value="${escapeHtml(iState.time)}" data-block-id="${block.id}" data-code="${item.code}" class="item-time touch-btn rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-colombina-navy" />
+                      <button type="button" data-block-id="${block.id}" data-code="${item.code}" title="Registrar hora actual" class="btn-now touch-btn px-2.5 py-1.5 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">
+                        🕒 Ahora
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 3 Botones Táctiles de Estado -->
+                  <div class="grid grid-cols-3 gap-2">
+                    <button type="button" data-block-id="${block.id}" data-code="${item.code}" data-status="cumple" class="btn-status touch-btn rounded-xl font-bold text-xs sm:text-sm border transition flex items-center justify-center gap-1.5 ${
+                      iState.status === "cumple"
+                        ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
+                        : "bg-emerald-50/60 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                    }">
+                      <span>✓</span><span>Cumple</span>
+                    </button>
+
+                    <button type="button" data-block-id="${block.id}" data-code="${item.code}" data-status="no_cumple" class="btn-status touch-btn rounded-xl font-bold text-xs sm:text-sm border transition flex items-center justify-center gap-1.5 ${
+                      iState.status === "no_cumple"
+                        ? "bg-red-600 text-white border-red-700 shadow-xs"
+                        : "bg-red-50/60 text-red-800 border-red-200 hover:bg-red-100"
+                    }">
+                      <span>✕</span><span>No cumple</span>
+                    </button>
+
+                    <button type="button" data-block-id="${block.id}" data-code="${item.code}" data-status="na" class="btn-status touch-btn rounded-xl font-bold text-xs sm:text-sm border transition flex items-center justify-center gap-1.5 ${
+                      iState.status === "na"
+                        ? "bg-slate-600 text-white border-slate-700 shadow-xs"
+                        : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                    }">
+                      <span>—</span><span>N/A</span>
+                    </button>
+                  </div>
+
+                  <!-- Dato Medido + Foto + Acción Correctiva -->
+                  <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                    <div class="md:col-span-3">
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Dato Medido (°C, pH, etc.)</label>
+                      <input type="text" value="${escapeHtml(iState.measuredValue)}" data-block-id="${block.id}" data-code="${item.code}" placeholder="Ej. 4.2 °C / pH 3.8" class="item-measured touch-btn w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy px-3 py-2 text-xs sm:text-sm outline-none" />
+                    </div>
+
+                    <div class="md:col-span-4">
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Evidencia Fotográfica</label>
+                      <div class="flex items-center gap-2">
+                        <label class="touch-btn cursor-pointer px-3 py-2 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 flex items-center gap-1.5 shrink-0">
+                          <span>📷</span><span>Foto</span>
+                          <input type="file" accept="image/*" capture="environment" data-block-id="${block.id}" data-code="${item.code}" class="item-photo-input hidden" />
+                        </label>
+                        ${
+                          iState.photoDataUrl
+                            ? `<div class="flex items-center gap-2">
+                                 <img src="${iState.photoDataUrl}" alt="Evidencia ${escapeHtml(item.code)}" class="h-10 w-10 rounded-lg object-cover border border-slate-300" />
+                                 <button type="button" data-block-id="${block.id}" data-code="${item.code}" class="btn-remove-photo text-xs font-bold text-red-600 hover:underline">Quitar</button>
+                               </div>`
+                            : `<span class="text-[11px] text-slate-500 leading-tight">Si Cumple no se toma foto</span>`
+                        }
+                      </div>
+                    </div>
+
+                    <div class="md:col-span-5">
+                      <label class="block text-[11px] font-bold uppercase tracking-wider ${isNoCumple ? "text-red-700" : "text-slate-500"} mb-1">
+                        Acción Correctiva / Observación ${isNoCumple ? "*" : ""}
+                      </label>
+                      <input type="text" value="${escapeHtml(iState.correctiveAction)}" data-block-id="${block.id}" data-code="${item.code}" placeholder="${isNoCumple ? "Obligatorio al marcar No cumple..." : "Observación o acción correctiva..."}" class="item-action touch-btn w-full rounded-xl border ${
+                        missingAction
+                          ? "border-2 border-red-500 bg-red-50 text-red-950 placeholder-red-400"
+                          : isNoCumple
+                            ? "border-red-300 bg-white text-slate-800"
+                            : "border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy"
+                      } px-3 py-2 text-xs sm:text-sm outline-none" />
+                      ${missingAction ? `<p class="text-[11px] font-bold text-red-600 mt-1">Ingrese la acción correctiva / observación.</p>` : ""}
+                    </div>
+                  </div>
+                </div>
+              `;
+
+              listWrap.appendChild(row);
+            });
+
+            card.appendChild(listWrap);
+          }
+
+          container.appendChild(card);
+        });
+
+        bindBlockEvents();
+        updateKPIs();
+      }
+
+      function bindBlockEvents() {
+        document.querySelectorAll(".area-op-select").forEach((sel) => {
+          sel.addEventListener("change", (e) => {
+            const blockId = e.target.dataset.blockId;
+            const isYes = e.target.value === "Sí";
+            const bState = state.blocks[blockId];
+            bState.active = isYes;
+            Object.keys(bState.items).forEach((code) => {
+              bState.items[code].status = isYes ? "" : "na";
+            });
+            renderBlocks();
+          });
+        });
+
+        document.querySelectorAll(".btn-status").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const target = e.currentTarget;
+            const { blockId, code, status } = target.dataset;
+            const itemState = state.blocks[blockId].items[code];
+            itemState.status = itemState.status === status ? "" : status;
+            if (!itemState.time && itemState.status) {
+              itemState.time = getCurrentHHMM();
+            }
+            if (itemState.status === "cumple" && itemState.photoDataUrl) {
+              itemState.photoDataUrl = "";
+              showToast("Recuerde: si Cumple no se toma foto. Se retiró la foto adjunta.", "info");
+            }
+            renderBlocks();
+          });
+        });
+
+        document.querySelectorAll(".btn-now").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const { blockId, code } = e.currentTarget.dataset;
+            state.blocks[blockId].items[code].time = getCurrentHHMM();
+            renderBlocks();
+          });
+        });
+
+        document.querySelectorAll(".item-time").forEach((inp) => {
+          inp.addEventListener("change", (e) => {
+            const { blockId, code } = e.target.dataset;
+            state.blocks[blockId].items[code].time = e.target.value;
+          });
+        });
+
+        document.querySelectorAll(".item-measured").forEach((inp) => {
+          inp.addEventListener("input", (e) => {
+            const { blockId, code } = e.target.dataset;
+            state.blocks[blockId].items[code].measuredValue = e.target.value;
+          });
+        });
+
+        document.querySelectorAll(".item-action").forEach((inp) => {
+          inp.addEventListener("input", (e) => {
+            const { blockId, code } = e.target.dataset;
+            const itemState = state.blocks[blockId].items[code];
+            itemState.correctiveAction = e.target.value;
+            if (itemState.status === "no_cumple") {
+              const hasText = e.target.value.trim().length > 0;
+              e.target.classList.toggle("border-2", !hasText);
+              e.target.classList.toggle("border-red-500", !hasText);
+              e.target.classList.toggle("bg-red-50", !hasText);
+              e.target.classList.toggle("border-red-300", hasText);
+              e.target.classList.toggle("bg-white", hasText);
+            }
+          });
+        });
+
+        document.querySelectorAll(".item-photo-input").forEach((inp) => {
+          inp.addEventListener("change", async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const { blockId, code } = e.target.dataset;
+            const itemState = state.blocks[blockId].items[code];
+            if (itemState.status === "cumple") {
+              showToast("Si el ítem Cumple no se toma foto.", "warning");
+              e.target.value = "";
+              return;
+            }
+            try {
+              const compressed = await compressImageFile(file, 900, 0.7);
+              itemState.photoDataUrl = compressed;
+              showToast("Foto comprimida y adjuntada.", "success");
+              renderBlocks();
+            } catch (_) {
+              showToast("No se pudo procesar la imagen.", "error");
+            }
+          });
+        });
+
+        document.querySelectorAll(".btn-remove-photo").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const { blockId, code } = e.currentTarget.dataset;
+            state.blocks[blockId].items[code].photoDataUrl = "";
+            renderBlocks();
+          });
+        });
+      }
+
+      function computeMetrics() {
+        let totalCumple = 0;
+        let totalNoCumple = 0;
+        let totalNA = 0;
+        let totalPendientes = 0;
+
+        const perBlock = BLOCKS_CONFIG.map((block) => {
+          const bState = state.blocks[block.id];
+          let cumple = 0;
+          let noCumple = 0;
+          let na = 0;
+          let pendientes = 0;
+          const findings = [];
+
+          block.items.forEach((item) => {
+            const st = bState.items[item.code];
+            if (st.status === "cumple") cumple += 1;
+            else if (st.status === "no_cumple") {
+              noCumple += 1;
+              findings.push({
+                block: block.name,
+                code: item.code,
+                desc: item.desc,
+                time: st.time || "-",
+                measuredValue: st.measuredValue || "-",
+                correctiveAction: st.correctiveAction || ""
+              });
+            } else if (st.status === "na") na += 1;
+            else pendientes += 1;
+          });
+
+          totalCumple += cumple;
+          totalNoCumple += noCumple;
+          totalNA += na;
+          totalPendientes += pendientes;
+
+          const aplicables = cumple + noCumple + pendientes;
+          const evaluados = cumple + noCumple;
+          const pctCumplimiento = evaluados > 0 ? (cumple / evaluados) * 100 : 0;
+
+          return {
+            id: block.id,
+            name: block.name,
+            inOperation: block.alwaysActive ? true : bState.active,
+            cumple,
+            noCumple,
+            na,
+            pendientes,
+            aplicables,
+            evaluados,
+            pctCumplimiento,
+            findings
+          };
+        });
+
+        const totalAplicables = totalCumple + totalNoCumple + totalPendientes;
+        const totalEvaluados = totalCumple + totalNoCumple;
+        const pctGlobal = totalEvaluados > 0 ? (totalCumple / totalEvaluados) * 100 : 0;
+
+        return {
+          perBlock,
+          totalCumple,
+          totalNoCumple,
+          totalNA,
+          totalPendientes,
+          totalAplicables,
+          totalEvaluados,
+          pctGlobal
+        };
+      }
+
+      function updateKPIs() {
+        const m = computeMetrics();
+        document.getElementById("kpiEvaluados").textContent = String(m.totalEvaluados);
+        document.getElementById("kpiEvaluadosSub").textContent = `de ${m.totalAplicables} aplicables`;
+
+        const pctFormatted = `${m.pctGlobal.toFixed(1)}%`;
+        document.getElementById("kpiCumplenPct").textContent = pctFormatted;
+        document.getElementById("kpiCumplenCount").textContent = `${m.totalCumple} cumplen · Meta ≥ 95%`;
+
+        const cumpleCard = document.getElementById("kpiCumplenCard");
+        const cumplePctEl = document.getElementById("kpiCumplenPct");
+        if (m.totalEvaluados > 0 && m.pctGlobal < 95) {
+          cumpleCard.className = "rounded-xl border border-amber-300 bg-amber-50 p-3.5";
+          cumplePctEl.className = "text-2xl font-extrabold text-amber-700 mt-1";
+        } else {
+          cumpleCard.className = "rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5";
+          cumplePctEl.className = "text-2xl font-extrabold text-emerald-700 mt-1";
+        }
+
+        document.getElementById("kpiNoCumplen").textContent = String(m.totalNoCumple);
+        document.getElementById("kpiNA").textContent = String(m.totalNA);
+        document.getElementById("kpiPendientes").textContent = String(m.totalPendientes);
+      }
+
+      function syncIncidentStyles() {
+        const secVal = document.getElementById("incidenteSeguridadSelect").value;
+        const secBox = document.getElementById("seguridadBox");
+        const secLabel = document.getElementById("seguridadExplicacionLabel");
+        const secInput = document.getElementById("seguridadExplicacionInput");
+        const secErr = document.getElementById("seguridadErrorMsg");
+
+        const isIncident = secVal !== "Sin novedad";
+        const isMissing = isIncident && !secInput.value.trim();
+
+        if (isIncident) {
+          secBox.className = "rounded-xl border-2 border-red-400 bg-red-50/60 p-4 space-y-3 transition";
+          secLabel.className = "block text-xs font-extrabold text-red-700 mb-1";
+          secLabel.textContent = "Explicación de lo sucedido *";
+          secInput.className = isMissing
+            ? "w-full rounded-xl border-2 border-red-500 bg-white px-3.5 py-2 text-sm text-red-950 outline-none transition"
+            : "w-full rounded-xl border border-red-300 bg-white px-3.5 py-2 text-sm text-slate-800 outline-none transition";
+          secErr.classList.toggle("hidden", !isMissing);
+        } else {
+          secBox.className = "rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3 transition";
+          secLabel.className = "block text-xs font-bold text-slate-600 mb-1";
+          secLabel.textContent = "Explicación de lo sucedido";
+          secInput.className = "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none transition";
+          secErr.classList.add("hidden");
+        }
+      }
+
+      function validateBeforeExport() {
+        syncIncidentStyles();
+        const secVal = document.getElementById("incidenteSeguridadSelect").value;
+        const secExp = document.getElementById("seguridadExplicacionInput").value.trim();
+        if (secVal !== "Sin novedad" && !secExp) {
+          showToast("Debe explicar el incidente de seguridad antes de continuar.", "error");
+          document.getElementById("seguridadExplicacionInput").focus();
+          return false;
+        }
+
+        for (const block of BLOCKS_CONFIG) {
+          const bState = state.blocks[block.id];
+          for (const item of block.items) {
+            const st = bState.items[item.code];
+            if (st.status === "no_cumple" && !st.correctiveAction.trim()) {
+              showToast(`Falta acción correctiva en ${item.code} (${block.name}).`, "error");
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      // Signature Canvas Setup
+      let hasSignature = false;
+      function setupSignatureCanvas() {
+        const canvas = document.getElementById("signatureCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+          const rect = canvas.getBoundingClientRect();
+          const ratio = window.devicePixelRatio || 1;
+          const prevData = hasSignature ? canvas.toDataURL() : null;
+          canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+          canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          ctx.lineWidth = 2.4;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.strokeStyle = "#1E3278";
+          if (prevData) {
+            const img = new Image();
+            img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+            img.src = prevData;
+          }
+        }
+
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        let drawing = false;
+        function getPos(evt) {
+          const rect = canvas.getBoundingClientRect();
+          const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+          const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+          return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startDraw(evt) {
+          evt.preventDefault();
+          drawing = true;
+          hasSignature = true;
+          const pos = getPos(evt);
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+        }
+
+        function moveDraw(evt) {
+          if (!drawing) return;
+          evt.preventDefault();
+          const pos = getPos(evt);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+        }
+
+        function endDraw() {
+          if (!drawing) return;
+          drawing = false;
+          ctx.closePath();
+        }
+
+        canvas.addEventListener("pointerdown", startDraw);
+        canvas.addEventListener("pointermove", moveDraw);
+        window.addEventListener("pointerup", endDraw);
+
+        document.getElementById("btnLimpiarFirma").addEventListener("click", () => {
+          const rect = canvas.getBoundingClientRect();
+          ctx.clearRect(0, 0, rect.width, rect.height);
+          hasSignature = false;
+          showToast("Firma limpiada.", "info");
+        });
+      }
+
+      function collectSnapshot() {
+        const m = computeMetrics();
+        const sigCanvas = document.getElementById("signatureCanvas");
+        return {
+          id: `turn_${Date.now()}`,
+          savedAt: new Date().toLocaleString("es-CO"),
+          responsable: document.getElementById("responsableSelect").value || "Sin asignar",
+          fecha: document.getElementById("fechaInput").value || getTodayISO(),
+          turno: document.getElementById("turnoSelect").value,
+          incidenteSeguridad: document.getElementById("incidenteSeguridadSelect").value,
+          seguridadExplicacion: document.getElementById("seguridadExplicacionInput").value.trim(),
+          casiIncidenteCalidad: document.getElementById("casiIncidenteCalidadSelect").value,
+          calidadExplicacion: document.getElementById("calidadExplicacionInput").value.trim(),
+          novedadesTurno: document.getElementById("novedadesTurnoInput").value.trim(),
+          signatureDataUrl: hasSignature ? sigCanvas.toDataURL("image/png") : "",
+          metrics: m,
+          blocks: JSON.parse(JSON.stringify(state.blocks))
+        };
+      }
+
+      function applySnapshot(snap) {
+        document.getElementById("responsableSelect").value = snap.responsable === "Sin asignar" ? "" : snap.responsable;
+        document.getElementById("fechaInput").value = snap.fecha || getTodayISO();
+        document.getElementById("turnoSelect").value = snap.turno || "Turno 1 (Nocturno)";
+        document.getElementById("incidenteSeguridadSelect").value = snap.incidenteSeguridad || "Sin novedad";
+        document.getElementById("seguridadExplicacionInput").value = snap.seguridadExplicacion || "";
+        document.getElementById("casiIncidenteCalidadSelect").value = snap.casiIncidenteCalidad || "Sin novedad";
+        document.getElementById("calidadExplicacionInput").value = snap.calidadExplicacion || "";
+        document.getElementById("novedadesTurnoInput").value = snap.novedadesTurno || "";
+
+        BLOCKS_CONFIG.forEach((block) => {
+          const savedBlock = snap.blocks && snap.blocks[block.id];
+          if (savedBlock) {
+            state.blocks[block.id].active = block.alwaysActive ? true : Boolean(savedBlock.active);
+            block.items.forEach((item) => {
+              const savedItem = savedBlock.items && savedBlock.items[item.code];
+              state.blocks[block.id].items[item.code] = savedItem
+                ? { ...savedItem }
+                : { status: state.blocks[block.id].active ? "" : "na", time: "", measuredValue: "", photoDataUrl: "", correctiveAction: "" };
+            });
+          }
+        });
+
+        const sigCanvas = document.getElementById("signatureCanvas");
+        const ctx = sigCanvas.getContext("2d");
+        const rect = sigCanvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        hasSignature = false;
+        if (snap.signatureDataUrl) {
+          const img = new Image();
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, rect.width, rect.height);
+            hasSignature = true;
+          };
+          img.src = snap.signatureDataUrl;
+        }
+
+        syncIncidentStyles();
+        renderBlocks();
+        showToast("Turno cargado desde el historial.", "success");
+      }
+
+      function getHistory() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function saveHistory(list) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        updateHistoryBadge();
+      }
+
+      function updateHistoryBadge() {
+        document.getElementById("historialBadge").textContent = String(getHistory().length);
+      }
+
+      function downloadXls(filename, htmlContent) {
+        const bom = "\uFEFF";
+        const blob = new Blob([bom + htmlContent], { type: "application/vnd.ms-excel;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function statusLabel(st) {
+        if (st === "cumple") return "Cumple";
+        if (st === "no_cumple") return "No cumple";
+        if (st === "na") return "N/A";
+        return "Pendiente";
+      }
+
+      function exportInitialExcel() {
+        if (!validateBeforeExport()) return;
+        const snap = collectSnapshot();
+
+        let itemRowsHtml = "";
+        BLOCKS_CONFIG.forEach((block) => {
+          const bState = state.blocks[block.id];
+          const opText = block.alwaysActive ? "Siempre activo" : (bState.active ? "Sí" : "No");
+          block.items.forEach((item) => {
+            const st = bState.items[item.code];
+            itemRowsHtml += `
+              <tr>
+                <td>${escapeHtml(block.name)}</td>
+                <td>${escapeHtml(opText)}</td>
+                <td>${escapeHtml(item.code)}</td>
+                <td>${escapeHtml(item.desc)}</td>
+                <td>${escapeHtml(st.time)}</td>
+                <td>${escapeHtml(statusLabel(st.status))}</td>
+                <td>${escapeHtml(st.measuredValue)}</td>
+                <td>${st.photoDataUrl ? "Adjunta" : "No"}</td>
+                <td>${escapeHtml(st.correctiveAction)}</td>
+              </tr>
+            `;
+          });
+        });
+
+        const xlsHtml = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head><meta charset="UTF-8"></head>
+          <body>
+            <table border="1" cellspacing="0" cellpadding="4">
+              <tr><th colspan="9" style="background:#1E3278;color:#FFFFFF;font-size:14pt;">COLOMBINA - RUTERO DE VERIFICACIÓN DE PROCESO Y CALIDAD EN PLANTA</th></tr>
+              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">1. IDENTIFICACIÓN DEL TURNO</th></tr>
+              <tr>
+                <td><b>Responsable / Verificador</b></td><td colspan="2">${escapeHtml(snap.responsable)}</td>
+                <td><b>Fecha</b></td><td colspan="2">${escapeHtml(snap.fecha)}</td>
+                <td><b>Turno</b></td><td colspan="2">${escapeHtml(snap.turno)}</td>
+              </tr>
+              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">2. NOVEDADES RELEVANTES, SEGURIDAD E INOCUIDAD DEL TURNO</th></tr>
+              <tr>
+                <td><b>Incidentes de seguridad</b></td><td colspan="2">${escapeHtml(snap.incidenteSeguridad)}</td>
+                <td><b>Explicación seguridad</b></td><td colspan="5">${escapeHtml(snap.seguridadExplicacion)}</td>
+              </tr>
+              <tr>
+                <td><b>Casi incidentes de calidad</b></td><td colspan="2">${escapeHtml(snap.casiIncidenteCalidad)}</td>
+                <td><b>Explicación calidad</b></td><td colspan="5">${escapeHtml(snap.calidadExplicacion)}</td>
+              </tr>
+              <tr>
+                <td><b>Novedades del turno</b></td><td colspan="8">${escapeHtml(snap.novedadesTurno)}</td>
+              </tr>
+              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">3. LISTA DE VERIFICACIÓN (12 BLOQUES · 82 ÍTEMS)</th></tr>
+              <tr style="background:#1E3278;color:#FFFFFF;">
+                <th>Bloque / Área</th>
+                <th>Área en operación</th>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Dato Medido</th>
+                <th>Foto</th>
+                <th>Acción Correctiva / Observación</th>
+              </tr>
+              ${itemRowsHtml}
+              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">4. INDICADORES Y FIRMA</th></tr>
+              <tr>
+                <td colspan="9"><b>Cumplimiento Global:</b> ${snap.metrics.pctGlobal.toFixed(1)}% (${snap.metrics.totalCumple} Cumplen / ${snap.metrics.totalNoCumple} No Cumplen / ${snap.metrics.totalNA} N/A / ${snap.metrics.totalPendientes} Pendientes)</td>
+              </tr>
+              <tr>
+                <td colspan="9"><b>Firma Verificador de Calidad:</b> Verificación realizada conforme al procedimiento F1345-1346 (${snap.signatureDataUrl ? "Firmado digitalmente" : "Sin firma registrada"}).</td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
+
+        downloadXls(`Rutero_Inicial_${snap.fecha}_${snap.turno.replace(/\s+/g, "_")}.xls`, xlsHtml);
+        showToast("Excel Formato Inicial (.xls) descargado.", "success");
+      }
+
+      function buildManagerialReportHtml(snap) {
+        const m = snap.metrics;
+        const rows = m.perBlock
+          .map(
+            (b) => `
+            <tr class="border-b border-slate-200">
+              <td class="py-2 px-2.5 font-bold text-slate-800">${escapeHtml(b.name)}</td>
+              <td class="py-2 px-2.5 text-center">${b.inOperation ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">En operación</span>' : '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-600">No aplica</span>'}</td>
+              <td class="py-2 px-2.5 text-center font-bold text-emerald-700">${b.cumple}</td>
+              <td class="py-2 px-2.5 text-center font-bold text-red-700">${b.noCumple}</td>
+              <td class="py-2 px-2.5 text-center text-slate-600">${b.na}</td>
+              <td class="py-2 px-2.5 text-center text-amber-700">${b.pendientes}</td>
+              <td class="py-2 px-2.5 text-center font-extrabold ${b.evaluados > 0 && b.pctCumplimiento < 95 ? "text-amber-700" : "text-colombina-navy"}">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
+            </tr>
+          `
+          )
+          .join("");
+
+        const allFindings = m.perBlock.flatMap((b) => b.findings);
+        const findingsHtml =
+          allFindings.length > 0
+            ? `<div class="overflow-x-auto border border-red-200 rounded-xl">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-red-700 text-white">
+                    <tr>
+                      <th class="py-2 px-2.5">Bloque</th>
+                      <th class="py-2 px-2.5">Código</th>
+                      <th class="py-2 px-2.5">Ítem</th>
+                      <th class="py-2 px-2.5">Dato</th>
+                      <th class="py-2 px-2.5">Acción Correctiva</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-red-100 bg-red-50/40">
+                    ${allFindings
+                      .map(
+                        (f) => `
+                      <tr>
+                        <td class="py-2 px-2.5 font-semibold">${escapeHtml(f.block)}</td>
+                        <td class="py-2 px-2.5 font-mono font-bold text-red-800">${escapeHtml(f.code)}</td>
+                        <td class="py-2 px-2.5">${escapeHtml(f.desc)}</td>
+                        <td class="py-2 px-2.5">${escapeHtml(f.measuredValue)}</td>
+                        <td class="py-2 px-2.5 font-semibold text-red-900">${escapeHtml(f.correctiveAction)}</td>
+                      </tr>
+                    `
+                      )
+                      .join("")}
+                  </tbody>
+                </table>
+              </div>`
+            : `<p class="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-xl p-3">Sin hallazgos críticos ("No cumple") registrados en el turno.</p>`;
+
+        return `
+          <div id="printableReportArea" class="space-y-4 text-slate-800">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
+              <div>
+                <div class="text-xs font-extrabold uppercase tracking-wider text-colombina-navy">Colombina · Reporte Gerencial de Turno</div>
+                <div class="text-xs text-slate-600 mt-0.5">
+                  <b>Responsable:</b> ${escapeHtml(snap.responsable)} · <b>Fecha:</b> ${escapeHtml(snap.fecha)} · <b>Turno:</b> ${escapeHtml(snap.turno)}
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-slate-500">Cumplimiento Global (Meta ≥ 95%)</div>
+                <div class="text-xl font-extrabold text-colombina-navy">${m.pctGlobal.toFixed(1)}%</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div class="font-bold text-slate-700">Seguridad: ${escapeHtml(snap.incidenteSeguridad)}</div>
+                <div class="text-slate-600 mt-0.5">${escapeHtml(snap.seguridadExplicacion || "Sin detalles adicionales.")}</div>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div class="font-bold text-slate-700">Calidad: ${escapeHtml(snap.casiIncidenteCalidad)}</div>
+                <div class="text-slate-600 mt-0.5">${escapeHtml(snap.calidadExplicacion || "Sin detalles adicionales.")}</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-colombina-navy mb-2">Consolidado por Sector / Línea</h4>
+              <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-colombina-navy text-white">
+                    <tr>
+                      <th class="py-2 px-2.5">Sector / Línea</th>
+                      <th class="py-2 px-2.5 text-center">Estado Operación</th>
+                      <th class="py-2 px-2.5 text-center">Cumple</th>
+                      <th class="py-2 px-2.5 text-center">No Cumple</th>
+                      <th class="py-2 px-2.5 text-center">N/A</th>
+                      <th class="py-2 px-2.5 text-center">Pendientes</th>
+                      <th class="py-2 px-2.5 text-center">% Cumplimiento</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-red-700 mb-2">Hallazgos Críticos (No Cumplen)</h4>
+              ${findingsHtml}
+            </div>
+
+            <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="text-slate-600">
+                Verificación realizada conforme al procedimiento <span class="font-bold text-colombina-navy">F1345-1346</span>.
+              </div>
+              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma Verificador" class="h-12 border border-slate-200 rounded-lg bg-white px-2" />` : `<span class="italic text-slate-400">Sin firma</span>`}
+            </div>
+          </div>
+        `;
+      }
+
+      function exportManagerialExcel(snap) {
+        const m = snap.metrics;
+        const sectorRows = m.perBlock
+          .map(
+            (b) => `
+            <tr>
+              <td>${escapeHtml(b.name)}</td>
+              <td>${b.inOperation ? "En operación" : "No aplica"}</td>
+              <td>${b.cumple}</td>
+              <td>${b.noCumple}</td>
+              <td>${b.na}</td>
+              <td>${b.pendientes}</td>
+              <td>${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
+            </tr>
+          `
+          )
+          .join("");
+
+        const allFindings = m.perBlock.flatMap((b) => b.findings);
+        const findingRows =
+          allFindings.length > 0
+            ? allFindings
+                .map(
+                  (f) => `
+                <tr>
+                  <td>${escapeHtml(f.block)}</td>
+                  <td>${escapeHtml(f.code)}</td>
+                  <td colspan="2">${escapeHtml(f.desc)}</td>
+                  <td>${escapeHtml(f.measuredValue)}</td>
+                  <td colspan="2">${escapeHtml(f.correctiveAction)}</td>
+                </tr>
+              `
+                )
+                .join("")
+            : `<tr><td colspan="7">Sin hallazgos críticos registrados.</td></tr>`;
+
+        const xlsHtml = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head><meta charset="UTF-8"></head>
+          <body>
+            <table border="1" cellspacing="0" cellpadding="4">
+              <tr><th colspan="7" style="background:#1E3278;color:#FFFFFF;font-size:13pt;">REPORTE GERENCIAL CONSOLIDADO - COLOMBINA</th></tr>
+              <tr>
+                <td><b>Responsable</b></td><td colspan="2">${escapeHtml(snap.responsable)}</td>
+                <td><b>Fecha</b></td><td>${escapeHtml(snap.fecha)}</td>
+                <td><b>Turno</b></td><td>${escapeHtml(snap.turno)}</td>
+              </tr>
+              <tr>
+                <td><b>Seguridad</b></td><td colspan="2">${escapeHtml(snap.incidenteSeguridad)}</td>
+                <td><b>Detalle seguridad</b></td><td colspan="3">${escapeHtml(snap.seguridadExplicacion)}</td>
+              </tr>
+              <tr>
+                <td><b>Calidad</b></td><td colspan="2">${escapeHtml(snap.casiIncidenteCalidad)}</td>
+                <td><b>Detalle calidad</b></td><td colspan="3">${escapeHtml(snap.calidadExplicacion)}</td>
+              </tr>
+              <tr style="background:#1E3278;color:#FFFFFF;">
+                <th>Sector / Línea</th>
+                <th>Estado Operación</th>
+                <th>Cumple</th>
+                <th>No Cumple</th>
+                <th>N/A</th>
+                <th>Pendientes</th>
+                <th>% Cumplimiento</th>
+              </tr>
+              ${sectorRows}
+              <tr><th colspan="7" style="background:#FEE2E2;color:#991B1B;text-align:left;">HALLAZGOS CRÍTICOS (NO CUMPLEN)</th></tr>
+              <tr style="background:#991B1B;color:#FFFFFF;">
+                <th>Bloque</th>
+                <th>Código</th>
+                <th colspan="2">Descripción</th>
+                <th>Dato Medido</th>
+                <th colspan="2">Acción Correctiva</th>
+              </tr>
+              ${findingRows}
+              <tr>
+                <td colspan="7"><b>Firma Verificador de Calidad:</b> Verificación realizada conforme al procedimiento F1345-1346.</td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
+
+        downloadXls(`Reporte_Gerencial_${snap.fecha}_${snap.turno.replace(/\s+/g, "_")}.xls`, xlsHtml);
+        showToast("Reporte Gerencial (.xls) descargado.", "success");
+      }
+
+      function openManagerialReportModal() {
+        if (!validateBeforeExport()) return;
+        const snap = collectSnapshot();
+        openModal({
+          title: "Reporte Gerencial del Turno",
+          bodyHtml: buildManagerialReportHtml(snap),
+          buttons: [
+            {
+              label: "Descargar Excel (.xls)",
+              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white",
+              closeOnClick: false,
+              onClick: () => exportManagerialExcel(snap)
+            },
+            {
+              label: "Imprimir / PDF",
+              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-colombina-navy hover:bg-colombina-dark text-white",
+              closeOnClick: false,
+              onClick: () => {
+                const area = document.getElementById("printableReportArea");
+                const win = window.open("", "_blank", "width=900,height=700");
+                if (win && area) {
+                  win.document.write(`
+                    <!DOCTYPE html>
+                    <html><head><title>Reporte Gerencial</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    </head><body class="p-6 bg-white">${area.outerHTML}</body></html>
+                  `);
+                  win.document.close();
+                  setTimeout(() => win.print(), 350);
+                } else {
+                  window.print();
+                }
+              }
+            },
+            {
+              label: "Cerrar",
+              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800"
+            }
+          ]
+        });
+      }
+
+      function openHistoryModal() {
+        const list = getHistory();
+        const bodyHtml =
+          list.length === 0
+            ? `<p class="text-sm text-slate-500 text-center py-6">Aún no hay turnos guardados en el historial de este dispositivo.</p>`
+            : `<div class="space-y-2.5">
+                ${list
+                  .map(
+                    (entry) => `
+                  <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div class="text-xs font-extrabold text-colombina-navy">${escapeHtml(entry.fecha)} · ${escapeHtml(entry.turno)}</div>
+                      <div class="text-xs font-semibold text-slate-700">${escapeHtml(entry.responsable)}</div>
+                      <div class="text-[11px] text-slate-500">Cumplimiento: <b>${entry.metrics.pctGlobal.toFixed(1)}%</b> · No cumple: <b>${entry.metrics.totalNoCumple}</b> · Guardado: ${escapeHtml(entry.savedAt)}</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" data-load-id="${entry.id}" class="hist-load-btn touch-btn px-3 py-1.5 rounded-lg bg-colombina-navy text-white text-xs font-bold">Cargar</button>
+                      <button type="button" data-del-id="${entry.id}" class="hist-del-btn touch-btn px-2.5 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-xs font-bold">Eliminar</button>
+                    </div>
+                  </div>
+                `
+                  )
+                  .join("")}
+              </div>`;
+
+        openModal({
+          title: "Historial de Turnos (localStorage)",
+          bodyHtml,
+          buttons: [
+            {
+              label: "Cerrar",
+              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800"
+            }
+          ]
+        });
+
+        document.querySelectorAll(".hist-load-btn").forEach((b) => {
+          b.addEventListener("click", () => {
+            const found = getHistory().find((x) => x.id === b.dataset.loadId);
+            if (found) {
+              closeModal();
+              applySnapshot(found);
+            }
+          });
+        });
+
+        document.querySelectorAll(".hist-del-btn").forEach((b) => {
+          b.addEventListener("click", () => {
+            const filtered = getHistory().filter((x) => x.id !== b.dataset.delId);
+            saveHistory(filtered);
+            closeModal();
+            openHistoryModal();
+            showToast("Registro eliminado del historial.", "info");
+          });
+        });
+      }
+
+      function resetForm() {
+        document.getElementById("responsableSelect").value = "";
+        document.getElementById("fechaInput").value = getTodayISO();
+        document.getElementById("turnoSelect").value = "Turno 1 (Nocturno)";
+        document.getElementById("incidenteSeguridadSelect").value = "Sin novedad";
+        document.getElementById("seguridadExplicacionInput").value = "";
+        document.getElementById("casiIncidenteCalidadSelect").value = "Sin novedad";
+        document.getElementById("calidadExplicacionInput").value = "";
+        document.getElementById("novedadesTurnoInput").value = "";
+
+        const sigCanvas = document.getElementById("signatureCanvas");
+        const ctx = sigCanvas.getContext("2d");
+        const rect = sigCanvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        hasSignature = false;
+
+        initState();
+        syncIncidentStyles();
+        renderBlocks();
+        showToast("Formulario reiniciado para un nuevo turno.", "info");
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("fechaInput").value = getTodayISO();
+        initState();
+        renderBlocks();
+        setupSignatureCanvas();
+        updateHistoryBadge();
+
+        document.getElementById("customModalCloseBtn").addEventListener("click", closeModal);
+        document.getElementById("customModal").addEventListener("click", (e) => {
+          if (e.target.id === "customModal") closeModal();
+        });
+
+        document.getElementById("incidenteSeguridadSelect").addEventListener("change", syncIncidentStyles);
+        document.getElementById("seguridadExplicacionInput").addEventListener("input", syncIncidentStyles);
+
+        document.getElementById("btnGuardarHistorial").addEventListener("click", () => {
+          if (!validateBeforeExport()) return;
+          const snap = collectSnapshot();
+          const list = getHistory();
+          list.unshift(snap);
+          saveHistory(list.slice(0, 50));
+          showToast("Turno guardado en el historial local.", "success");
+        });
+
+        document.getElementById("btnHistorial").addEventListener("click", openHistoryModal);
+        document.getElementById("btnExportExcelInicial").addEventListener("click", exportInitialExcel);
+        document.getElementById("btnReporteGerencial").addEventListener("click", openManagerialReportModal);
+
+        document.getElementById("btnNuevoTurno").addEventListener("click", () => {
+          openModal({
+            title: "Limpiar formulario",
+            bodyHtml: "<p>¿Desea limpiar todos los campos y reiniciar los 12 bloques del turno actual?</p>",
+            buttons: [
+              {
+                label: "Cancelar",
+                className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800"
+              },
+              {
+                label: "Sí, limpiar",
+                className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-red-600 hover:bg-red-700 text-white",
+                onClick: resetForm
+              }
+            ]
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
