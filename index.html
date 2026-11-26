@@ -1170,6 +1170,45 @@
 
       function buildManagerialReportHtml(snap) {
         const m = snap.metrics;
+        const allPhotos = collectEvidencePhotos();
+        const photosHtml =
+          allPhotos.length > 0
+            ? `<div style="border: 1px solid #cbd5e1; border-radius: 10px; overflow-x: auto;">
+                <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
+                  <thead style="background: #1E3278; color: #ffffff;">
+                    <tr>
+                      <th style="padding: 8px 10px;">Bloque / Código</th>
+                      <th style="padding: 8px 10px;">Detalle</th>
+                      <th style="padding: 8px 10px; text-align: center;">Foto (8cm x 8cm)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${allPhotos
+                      .map(
+                        (p) => `
+                      <tr style="border-top: 1px solid #e2e8f0; background: #ffffff;">
+                        <td style="padding: 8px 10px; vertical-align: top; font-weight: 700; color: #1e293b;">
+                          <div>${escapeHtml(p.block)}</div>
+                          <div style="font-family: monospace; color: #1E3278; margin-top: 2px;">${escapeHtml(p.code)}</div>
+                          <div style="font-size: 11px; font-weight: 600; color: #475569; margin-top: 4px;">Estado: ${escapeHtml(p.status)} · Hora: ${escapeHtml(p.time)}</div>
+                        </td>
+                        <td style="padding: 8px 10px; vertical-align: top; color: #334155;">
+                          <div><b>Ítem:</b> ${escapeHtml(p.desc)}</div>
+                          <div style="margin-top: 3px;"><b>Dato:</b> ${escapeHtml(p.measuredValue)}</div>
+                          <div style="margin-top: 3px;"><b>Acción / Obs.:</b> ${escapeHtml(p.correctiveAction)}</div>
+                        </td>
+                        <td style="padding: 8px 10px; text-align: center; vertical-align: middle;">
+                          <img src="${p.photoDataUrl}" alt="Evidencia ${escapeHtml(p.code)}" style="width: 8cm; height: 8cm; max-width: 100%; object-fit: contain; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; display: inline-block;" />
+                        </td>
+                      </tr>
+                    `
+                      )
+                      .join("")}
+                  </tbody>
+                </table>
+              </div>`
+            : `<p style="font-size: 12px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin: 0;">Sin fotografías de evidencia adjuntas en el turno.</p>`;
+
         const rows = m.perBlock
           .map(
             (b) => `
@@ -1268,45 +1307,6 @@
                 </table>
               </div>
             </div>
-
-            const allPhotos = collectEvidencePhotos();
-            const photosHtml =
-              allPhotos.length > 0
-                ? `<div style="border: 1px solid #cbd5e1; border-radius: 10px; overflow-x: auto;">
-                    <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
-                      <thead style="background: #1E3278; color: #ffffff;">
-                        <tr>
-                          <th style="padding: 8px 10px;">Bloque / Código</th>
-                          <th style="padding: 8px 10px;">Detalle</th>
-                          <th style="padding: 8px 10px; text-align: center;">Foto (8cm x 8cm)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        ${allPhotos
-                          .map(
-                            (p) => `
-                          <tr style="border-top: 1px solid #e2e8f0; background: #ffffff;">
-                            <td style="padding: 8px 10px; vertical-align: top; font-weight: 700; color: #1e293b;">
-                              <div>${escapeHtml(p.block)}</div>
-                              <div style="font-family: monospace; color: #1E3278; margin-top: 2px;">${escapeHtml(p.code)}</div>
-                              <div style="font-size: 11px; font-weight: 600; color: #475569; margin-top: 4px;">Estado: ${escapeHtml(p.status)} · Hora: ${escapeHtml(p.time)}</div>
-                            </td>
-                            <td style="padding: 8px 10px; vertical-align: top; color: #334155;">
-                              <div><b>Ítem:</b> ${escapeHtml(p.desc)}</div>
-                              <div style="margin-top: 3px;"><b>Dato:</b> ${escapeHtml(p.measuredValue)}</div>
-                              <div style="margin-top: 3px;"><b>Acción / Obs.:</b> ${escapeHtml(p.correctiveAction)}</div>
-                            </td>
-                            <td style="padding: 8px 10px; text-align: center; vertical-align: middle;">
-                              <img src="${p.photoDataUrl}" alt="Evidencia ${escapeHtml(p.code)}" style="width: 8cm; height: 8cm; max-width: 100%; object-fit: contain; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; display: inline-block;" />
-                            </td>
-                          </tr>
-                        `
-                          )
-                          .join("")}
-                      </tbody>
-                    </table>
-                  </div>`
-                : `<p style="font-size: 12px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin: 0;">Sin fotografías de evidencia adjuntas en el turno.</p>`;
 
             <div style="margin-bottom: 14px;">
               <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #b91c1c; margin: 0 0 8px 0;">Hallazgos Críticos (No Cumplen)</h4>
