@@ -83,17 +83,6 @@
           </p>
         </div>
       </div>
-
-      <div class="flex items-center gap-2">
-        <button id="btnHistorial" type="button" class="touch-btn bg-white/15 hover:bg-white/25 text-white border border-white/25 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
-          <span>🕒</span>
-          <span>Historial de Turnos</span>
-          <span id="historialBadge" class="bg-colombina-gold text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
-        </button>
-        <button id="btnNuevoTurno" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition">
-          Limpiar
-        </button>
-      </div>
     </div>
   </header>
 
@@ -224,12 +213,12 @@
       <div id="bloquesContainer" class="space-y-4"></div>
     </section>
 
-    <!-- SECCIÓN 4: Indicadores en Vivo, Firma y Envío -->
+    <!-- SECCIÓN 4: Indicadores en Vivo, Firma y Acciones -->
     <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
       <div class="border-b border-slate-100 pb-3">
         <h2 class="text-base sm:text-lg font-bold text-colombina-navy flex items-center gap-2">
           <span class="w-7 h-7 rounded-lg bg-colombina-navy text-white text-sm flex items-center justify-center font-bold">4</span>
-          Indicadores en Vivo, Firma y Envío de Documento
+          Indicadores en Vivo, Firma y Envío
         </h2>
       </div>
 
@@ -284,19 +273,17 @@
         </div>
       </div>
 
-      <!-- Botones de Acción -->
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-        <button id="btnGuardarHistorial" type="button" class="touch-btn bg-colombina-navy hover:bg-colombina-dark text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
-          <span>💾</span>
-          <span>Guardar en Historial</span>
+      <!-- Nuevos Botones Únicos de la App -->
+      <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+        <button id="btnCrearInformeRutero" type="button" class="touch-btn bg-colombina-navy hover:bg-colombina-dark text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+          <span>📄</span>
+          <span>Crear informe rutero</span>
         </button>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <button id="btnReporteGerencial" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
-            <span>📤</span>
-            <span>Enviar</span>
-          </button>
-        </div>
+        <button id="btnEnviar" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+          <span>📤</span>
+          <span>Enviar</span>
+        </button>
       </div>
     </section>
 
@@ -306,7 +293,6 @@
     (function () {
       "use strict";
 
-      const STORAGE_KEY = "colombina_rutero_historial_v1";
       const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwU8Y3jYaKIzkCO2jrH4tzndfT1c32wR4-jf_QRqx2GYDfaQwnWazfW7niVganeuMNDvQ/exec";
 
       const BLOCKS_CONFIG = [
@@ -604,19 +590,30 @@
                     </div>
 
                     <div class="md:col-span-4">
-                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Evidencia Fotográfica</label>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        Evidencia Fotográfica ${isNoCumple ? "*" : ""}
+                      </label>
                       <div class="flex items-center gap-2">
-                        <label class="touch-btn cursor-pointer px-3 py-2 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 flex items-center gap-1.5 shrink-0">
-                          <span>📷</span><span>Foto</span>
-                          <input type="file" accept="image/*" capture="environment" data-block-id="${block.id}" data-code="${item.code}" class="item-photo-input hidden" />
-                        </label>
                         ${
-                          iState.photoDataUrl
-                            ? `<div class="flex items-center gap-2">
-                                 <img src="${iState.photoDataUrl}" alt="Evidencia ${escapeHtml(item.code)}" class="h-10 w-10 rounded-lg object-cover border border-slate-300" />
-                                 <button type="button" data-block-id="${block.id}" data-code="${item.code}" class="btn-remove-photo text-xs font-bold text-red-600 hover:underline">Quitar</button>
-                               </div>`
-                            : `<span class="text-[11px] text-slate-500 leading-tight">Si Cumple no se toma foto</span>`
+                          iState.status === "cumple"
+                            ? `<button type="button" disabled class="touch-btn opacity-50 cursor-not-allowed px-3 py-2 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-400 flex items-center gap-1.5 shrink-0">
+                                 <span>🔒</span><span>Foto bloqueada</span>
+                               </button>
+                               <span class="text-[11px] text-slate-500 leading-tight">Bloqueado al marcar Cumple</span>`
+                            : `<label class="touch-btn cursor-pointer px-3 py-2 rounded-xl border ${
+                                isNoCumple && !iState.photoDataUrl ? "border-2 border-red-500 bg-red-50 text-red-800" : "border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700"
+                              } text-xs font-bold flex items-center gap-1.5 shrink-0">
+                                 <span>📷</span><span>Foto</span>
+                                 <input type="file" accept="image/*" capture="environment" data-block-id="${block.id}" data-code="${item.code}" class="item-photo-input hidden" />
+                               </label>
+                               ${
+                                 iState.photoDataUrl
+                                   ? `<div class="flex items-center gap-2">
+                                        <img src="${iState.photoDataUrl}" alt="Evidencia ${escapeHtml(item.code)}" class="h-10 w-10 rounded-lg object-cover border border-slate-300" />
+                                        <button type="button" data-block-id="${block.id}" data-code="${item.code}" class="btn-remove-photo text-xs font-bold text-red-600 hover:underline">Quitar</button>
+                                      </div>`
+                                   : `<span class="text-[11px] ${isNoCumple ? "text-red-600 font-bold" : "text-slate-500"} leading-tight">${isNoCumple ? "Foto obligatoria" : "Adjunte evidencia si aplica"}</span>`
+                               }`
                         }
                       </div>
                     </div>
@@ -625,12 +622,20 @@
                       <label class="block text-[11px] font-bold uppercase tracking-wider ${isNoCumple ? "text-red-700" : "text-slate-500"} mb-1">
                         Acción Correctiva / Observación ${isNoCumple ? "*" : ""}
                       </label>
-                      <input type="text" value="${escapeHtml(iState.correctiveAction)}" data-block-id="${block.id}" data-code="${item.code}" placeholder="${isNoCumple ? "Obligatorio al marcar No cumple..." : "Observación o acción correctiva..."}" class="item-action touch-btn w-full rounded-xl border ${
-                        missingAction
-                          ? "border-2 border-red-500 bg-red-50 text-red-950 placeholder-red-400"
+                      <input type="text" ${iState.status === "cumple" ? "disabled" : ""} value="${iState.status === "cumple" ? "" : escapeHtml(iState.correctiveAction)}" data-block-id="${block.id}" data-code="${item.code}" placeholder="${
+                        iState.status === "cumple"
+                          ? "Bloqueado al marcar Cumple..."
                           : isNoCumple
-                            ? "border-red-300 bg-white text-slate-800"
-                            : "border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy"
+                            ? "Obligatorio al marcar No cumple..."
+                            : "Observación o acción correctiva..."
+                      }" class="item-action touch-btn w-full rounded-xl border ${
+                        iState.status === "cumple"
+                          ? "opacity-50 cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                          : missingAction
+                            ? "border-2 border-red-500 bg-red-50 text-red-950 placeholder-red-400"
+                            : isNoCumple
+                              ? "border-red-300 bg-white text-slate-800"
+                              : "border-slate-300 bg-slate-50 focus:bg-white focus:border-colombina-navy"
                       } px-3 py-2 text-xs sm:text-sm outline-none" />
                       ${missingAction ? `<p class="text-[11px] font-bold text-red-600 mt-1">Ingrese la acción correctiva / observación.</p>` : ""}
                     </div>
@@ -674,9 +679,13 @@
             if (!itemState.time && itemState.status) {
               itemState.time = getCurrentHHMM();
             }
-            if (itemState.status === "cumple" && itemState.photoDataUrl) {
+            if (itemState.status === "cumple") {
+              const hadMediaOrAction = Boolean(itemState.photoDataUrl || itemState.correctiveAction.trim());
               itemState.photoDataUrl = "";
-              showToast("Recuerde: si Cumple no se toma foto. Se retiró la foto adjunta.", "info");
+              itemState.correctiveAction = "";
+              if (hadMediaOrAction) {
+                showToast("Al marcar Cumple se bloquean foto y acción correctiva/observación.", "info");
+              }
             }
             renderBlocks();
           });
@@ -875,6 +884,28 @@
 
       function validateBeforeExport() {
         syncIncidentStyles();
+
+        const respVal = document.getElementById("responsableSelect").value.trim();
+        if (!respVal) {
+          showToast("Debe seleccionar el Responsable / Verificador.", "error");
+          document.getElementById("responsableSelect").focus();
+          return false;
+        }
+
+        const fechaVal = document.getElementById("fechaInput").value.trim();
+        if (!fechaVal) {
+          showToast("Debe seleccionar la Fecha del turno.", "error");
+          document.getElementById("fechaInput").focus();
+          return false;
+        }
+
+        const turnoVal = document.getElementById("turnoSelect").value.trim();
+        if (!turnoVal) {
+          showToast("Debe seleccionar el Turno.", "error");
+          document.getElementById("turnoSelect").focus();
+          return false;
+        }
+
         const secVal = document.getElementById("incidenteSeguridadSelect").value;
         const secExp = document.getElementById("seguridadExplicacionInput").value.trim();
         if (secVal !== "Sin novedad" && !secExp) {
@@ -887,12 +918,29 @@
           const bState = state.blocks[block.id];
           for (const item of block.items) {
             const st = bState.items[item.code];
-            if (st.status === "no_cumple" && !st.correctiveAction.trim()) {
-              showToast(`Falta acción correctiva en ${item.code} (${block.name}).`, "error");
+            if (bState.active && st.status !== "cumple" && st.status !== "no_cumple") {
+              showToast(`Debe marcar Cumple o No cumple en ${item.code} (${block.name}).`, "error");
               return false;
+            }
+            if (st.status === "no_cumple") {
+              if (!st.photoDataUrl) {
+                showToast(`La foto es obligatoria al marcar No cumple en ${item.code} (${block.name}).`, "error");
+                return false;
+              }
+              if (!st.correctiveAction.trim()) {
+                showToast(`La acción correctiva / observación es obligatoria en ${item.code} (${block.name}).`, "error");
+                return false;
+              }
             }
           }
         }
+
+        if (!hasSignature) {
+          showToast("La firma del verificador de calidad es obligatoria.", "error");
+          document.getElementById("signatureCanvas").scrollIntoView({ behavior: "smooth", block: "center" });
+          return false;
+        }
+
         return true;
       }
 
@@ -970,7 +1018,6 @@
         const m = computeMetrics();
         const sigCanvas = document.getElementById("signatureCanvas");
         return {
-          id: `turn_${Date.now()}`,
           savedAt: new Date().toLocaleString("es-CO"),
           responsable: document.getElementById("responsableSelect").value || "Sin asignar",
           fecha: document.getElementById("fechaInput").value || getTodayISO(),
@@ -986,162 +1033,11 @@
         };
       }
 
-      function applySnapshot(snap) {
-        document.getElementById("responsableSelect").value = snap.responsable === "Sin asignar" ? "" : snap.responsable;
-        document.getElementById("fechaInput").value = snap.fecha || getTodayISO();
-        document.getElementById("turnoSelect").value = snap.turno || "Turno 1 (Nocturno)";
-        document.getElementById("incidenteSeguridadSelect").value = snap.incidenteSeguridad || "Sin novedad";
-        document.getElementById("seguridadExplicacionInput").value = snap.seguridadExplicacion || "";
-        document.getElementById("casiIncidenteCalidadSelect").value = snap.casiIncidenteCalidad || "Sin novedad";
-        document.getElementById("calidadExplicacionInput").value = snap.calidadExplicacion || "";
-        document.getElementById("novedadesTurnoInput").value = snap.novedadesTurno || "";
-
-        BLOCKS_CONFIG.forEach((block) => {
-          const savedBlock = snap.blocks && snap.blocks[block.id];
-          if (savedBlock) {
-            state.blocks[block.id].active = block.alwaysActive ? true : Boolean(savedBlock.active);
-            block.items.forEach((item) => {
-              const savedItem = savedBlock.items && savedBlock.items[item.code];
-              state.blocks[block.id].items[item.code] = savedItem
-                ? { ...savedItem }
-                : { status: state.blocks[block.id].active ? "" : "na", time: "", measuredValue: "", photoDataUrl: "", correctiveAction: "" };
-            });
-          }
-        });
-
-        const sigCanvas = document.getElementById("signatureCanvas");
-        const ctx = sigCanvas.getContext("2d");
-        const rect = sigCanvas.getBoundingClientRect();
-        ctx.clearRect(0, 0, rect.width, rect.height);
-        hasSignature = false;
-        if (snap.signatureDataUrl) {
-          const img = new Image();
-          img.onload = () => {
-            ctx.drawImage(img, 0, 0, rect.width, rect.height);
-            hasSignature = true;
-          };
-          img.src = snap.signatureDataUrl;
-        }
-
-        syncIncidentStyles();
-        renderBlocks();
-        showToast("Turno cargado desde el historial.", "success");
-      }
-
-      function getHistory() {
-        try {
-          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-        } catch (_) {
-          return [];
-        }
-      }
-
-      function saveHistory(list) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-        updateHistoryBadge();
-      }
-
-      function updateHistoryBadge() {
-        document.getElementById("historialBadge").textContent = String(getHistory().length);
-      }
-
-      function downloadXls(filename, htmlContent) {
-        const bom = "﻿";
-        const blob = new Blob([bom + htmlContent], { type: "application/vnd.ms-excel;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
-
       function statusLabel(st) {
         if (st === "cumple") return "Cumple";
         if (st === "no_cumple") return "No cumple";
         if (st === "na") return "N/A";
         return "Pendiente";
-      }
-
-      function exportInitialExcel() {
-        if (!validateBeforeExport()) return;
-        const snap = collectSnapshot();
-
-        let itemRowsHtml = "";
-        BLOCKS_CONFIG.forEach((block) => {
-          const bState = state.blocks[block.id];
-          const opText = block.alwaysActive ? "Siempre activo" : (bState.active ? "Sí" : "No");
-          block.items.forEach((item) => {
-            const st = bState.items[item.code];
-            itemRowsHtml += `
-              <tr>
-                <td>${escapeHtml(block.name)}</td>
-                <td>${escapeHtml(opText)}</td>
-                <td>${escapeHtml(item.code)}</td>
-                <td>${escapeHtml(item.desc)}</td>
-                <td>${escapeHtml(st.time)}</td>
-                <td>${escapeHtml(statusLabel(st.status))}</td>
-                <td>${escapeHtml(st.measuredValue)}</td>
-                <td>${st.photoDataUrl ? "Adjunta" : "No"}</td>
-                <td>${escapeHtml(st.correctiveAction)}</td>
-              </tr>
-            `;
-          });
-        });
-
-        const xlsHtml = `
-          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-          <head><meta charset="UTF-8"></head>
-          <body>
-            <table border="1" cellspacing="0" cellpadding="4">
-              <tr><th colspan="9" style="background:#1E3278;color:#FFFFFF;font-size:14pt;">COLOMBINA - RUTERO DE VERIFICACIÓN DE PROCESO Y CALIDAD EN PLANTA</th></tr>
-              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">1. IDENTIFICACIÓN DEL TURNO</th></tr>
-              <tr>
-                <td><b>Responsable / Verificador</b></td><td colspan="2">${escapeHtml(snap.responsable)}</td>
-                <td><b>Fecha</b></td><td colspan="2">${escapeHtml(snap.fecha)}</td>
-                <td><b>Turno</b></td><td colspan="2">${escapeHtml(snap.turno)}</td>
-              </tr>
-              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">2. NOVEDADES RELEVANTES, SEGURIDAD E INOCUIDAD DEL TURNO</th></tr>
-              <tr>
-                <td><b>Incidentes de seguridad</b></td><td colspan="2">${escapeHtml(snap.incidenteSeguridad)}</td>
-                <td><b>Explicación seguridad</b></td><td colspan="5">${escapeHtml(snap.seguridadExplicacion)}</td>
-              </tr>
-              <tr>
-                <td><b>Casi incidentes de calidad</b></td><td colspan="2">${escapeHtml(snap.casiIncidenteCalidad)}</td>
-                <td><b>Explicación calidad</b></td><td colspan="5">${escapeHtml(snap.calidadExplicacion)}</td>
-              </tr>
-              <tr>
-                <td><b>Novedades del turno</b></td><td colspan="8">${escapeHtml(snap.novedadesTurno)}</td>
-              </tr>
-              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">3. LISTA DE VERIFICACIÓN (12 BLOQUES · 82 ÍTEMS)</th></tr>
-              <tr style="background:#1E3278;color:#FFFFFF;">
-                <th>Bloque / Área</th>
-                <th>Área en operación</th>
-                <th>Código</th>
-                <th>Descripción</th>
-                <th>Hora</th>
-                <th>Estado</th>
-                <th>Dato Medido</th>
-                <th>Foto</th>
-                <th>Acción Correctiva / Observación</th>
-              </tr>
-              ${itemRowsHtml}
-              <tr><th colspan="9" style="background:#EEF2FF;text-align:left;">4. INDICADORES Y FIRMA</th></tr>
-              <tr>
-                <td colspan="9"><b>Cumplimiento Global:</b> ${snap.metrics.pctGlobal.toFixed(1)}% (${snap.metrics.totalCumple} Cumplen / ${snap.metrics.totalNoCumple} No Cumplen / ${snap.metrics.totalNA} N/A / ${snap.metrics.totalPendientes} Pendientes)</td>
-              </tr>
-              <tr>
-                <td colspan="9"><b>Firma Verificador de Calidad:</b> Verificación realizada conforme al procedimiento F1345-1346 (${snap.signatureDataUrl ? "Firmado digitalmente" : "Sin firma registrada"}).</td>
-              </tr>
-            </table>
-          </body>
-          </html>
-        `;
-
-        downloadXls(`Rutero_Inicial_${snap.fecha}_${snap.turno.replace(/\s+/g, "_")}.xls`, xlsHtml);
-        showToast("Excel Formato Inicial (.xls) descargado.", "success");
       }
 
       function collectEvidencePhotos() {
@@ -1168,164 +1064,27 @@
         return photos;
       }
 
-      function buildManagerialReportHtml(snap) {
-        const m = snap.metrics;
-        const allPhotos = collectEvidencePhotos();
-        const photosHtml =
-          allPhotos.length > 0
-            ? `<div style="border: 1px solid #cbd5e1; border-radius: 10px; overflow-x: auto;">
-                <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
-                  <thead style="background: #1E3278; color: #ffffff;">
-                    <tr>
-                      <th style="padding: 8px 10px;">Bloque / Código</th>
-                      <th style="padding: 8px 10px;">Detalle</th>
-                      <th style="padding: 8px 10px; text-align: center;">Foto (8cm x 8cm)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${allPhotos
-                      .map(
-                        (p) => `
-                      <tr style="border-top: 1px solid #e2e8f0; background: #ffffff;">
-                        <td style="padding: 8px 10px; vertical-align: top; font-weight: 700; color: #1e293b;">
-                          <div>${escapeHtml(p.block)}</div>
-                          <div style="font-family: monospace; color: #1E3278; margin-top: 2px;">${escapeHtml(p.code)}</div>
-                          <div style="font-size: 11px; font-weight: 600; color: #475569; margin-top: 4px;">Estado: ${escapeHtml(p.status)} · Hora: ${escapeHtml(p.time)}</div>
-                        </td>
-                        <td style="padding: 8px 10px; vertical-align: top; color: #334155;">
-                          <div><b>Ítem:</b> ${escapeHtml(p.desc)}</div>
-                          <div style="margin-top: 3px;"><b>Dato:</b> ${escapeHtml(p.measuredValue)}</div>
-                          <div style="margin-top: 3px;"><b>Acción / Obs.:</b> ${escapeHtml(p.correctiveAction)}</div>
-                        </td>
-                        <td style="padding: 8px 10px; text-align: center; vertical-align: middle;">
-                          <img src="${p.photoDataUrl}" alt="Evidencia ${escapeHtml(p.code)}" style="width: 8cm; height: 8cm; max-width: 100%; object-fit: contain; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; display: inline-block;" />
-                        </td>
-                      </tr>
-                    `
-                      )
-                      .join("")}
-                  </tbody>
-                </table>
-              </div>`
-            : `<p style="font-size: 12px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin: 0;">Sin fotografías de evidencia adjuntas en el turno.</p>`;
-
-        const rows = m.perBlock
-          .map(
-            (b) => `
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 8px 10px; font-weight: 700; color: #1e293b;">${escapeHtml(b.name)}</td>
-              <td style="padding: 8px 10px; text-align: center;">${
-                b.inOperation
-                  ? '<span style="display:inline-block; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:700; background:#d1fae5; color:#065f46;">En operación</span>'
-                  : '<span style="display:inline-block; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:700; background:#e2e8f0; color:#475569;">No aplica</span>'
-              }</td>
-              <td style="padding: 8px 10px; text-align: center; font-weight: 700; color: #047857;">${b.cumple}</td>
-              <td style="padding: 8px 10px; text-align: center; font-weight: 700; color: #b91c1c;">${b.noCumple}</td>
-              <td style="padding: 8px 10px; text-align: center; color: #475569;">${b.na}</td>
-              <td style="padding: 8px 10px; text-align: center; color: #b45309;">${b.pendientes}</td>
-              <td style="padding: 8px 10px; text-align: center; font-weight: 800; color: ${b.evaluados > 0 && b.pctCumplimiento < 95 ? "#b45309" : "#1E3278"};">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
-            </tr>
-          `
-          )
-          .join("");
-
-        const allFindings = m.perBlock.flatMap((b) => b.findings);
-        const findingsHtml =
-          allFindings.length > 0
-            ? `<div style="border: 1px solid #fecaca; border-radius: 12px; overflow: hidden;">
-                <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
-                  <thead style="background: #b91c1c; color: #ffffff;">
-                    <tr>
-                      <th style="padding: 8px 10px;">Bloque</th>
-                      <th style="padding: 8px 10px;">Código</th>
-                      <th style="padding: 8px 10px;">Ítem</th>
-                      <th style="padding: 8px 10px;">Dato</th>
-                      <th style="padding: 8px 10px;">Acción Correctiva</th>
-                    </tr>
-                  </thead>
-                  <tbody style="background: #fef2f2;">
-                    ${allFindings
-                      .map(
-                        (f) => `
-                      <tr style="border-top: 1px solid #fee2e2;">
-                        <td style="padding: 8px 10px; font-weight: 600;">${escapeHtml(f.block)}</td>
-                        <td style="padding: 8px 10px; font-family: monospace; font-weight: 700; color: #991b1b;">${escapeHtml(f.code)}</td>
-                        <td style="padding: 8px 10px;">${escapeHtml(f.desc)}</td>
-                        <td style="padding: 8px 10px;">${escapeHtml(f.measuredValue)}</td>
-                        <td style="padding: 8px 10px; font-weight: 600; color: #7f1d1d;">${escapeHtml(f.correctiveAction)}</td>
-                      </tr>
-                    `
-                      )
-                      .join("")}
-                  </tbody>
-                </table>
-              </div>`
-            : `<p style="font-size: 12px; color: #047857; font-weight: 600; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px; margin: 0;">Sin hallazgos críticos ("No cumple") registrados en el turno.</p>`;
-
-        return `
-          <div style="background: #ffffff; color: #1e293b; font-family: Arial, Helvetica, sans-serif; padding: 4px;">
-            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 14px;">
-              <div>
-                <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #1E3278;">Colombina · Reporte Gerencial de Turno</div>
-                <div style="font-size: 12px; color: #475569; margin-top: 4px;">
-                  <b>Responsable:</b> ${escapeHtml(snap.responsable)} · <b>Fecha:</b> ${escapeHtml(snap.fecha)} · <b>Turno:</b> ${escapeHtml(snap.turno)}
-                </div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 11px; color: #64748b;">Cumplimiento Global (Meta ≥ 95%)</div>
-                <div style="font-size: 20px; font-weight: 800; color: #1E3278;">${m.pctGlobal.toFixed(1)}%</div>
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; margin-bottom: 14px;">
-              <div style="border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; padding: 10px;">
-                <div style="font-weight: 700; color: #334155;">Seguridad: ${escapeHtml(snap.incidenteSeguridad)}</div>
-                <div style="color: #475569; margin-top: 3px;">${escapeHtml(snap.seguridadExplicacion || "Sin detalles adicionales.")}</div>
-              </div>
-              <div style="border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; padding: 10px;">
-                <div style="font-weight: 700; color: #334155;">Calidad: ${escapeHtml(snap.casiIncidenteCalidad)}</div>
-                <div style="color: #475569; margin-top: 3px;">${escapeHtml(snap.calidadExplicacion || "Sin detalles adicionales.")}</div>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 14px;">
-              <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #1E3278; margin: 0 0 8px 0;">Consolidado por Sector / Línea</h4>
-              <div style="border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
-                <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
-                  <thead style="background: #1E3278; color: #ffffff;">
-                    <tr>
-                      <th style="padding: 8px 10px;">Sector / Línea</th>
-                      <th style="padding: 8px 10px; text-align: center;">Estado Operación</th>
-                      <th style="padding: 8px 10px; text-align: center;">Cumple</th>
-                      <th style="padding: 8px 10px; text-align: center;">No Cumple</th>
-                      <th style="padding: 8px 10px; text-align: center;">N/A</th>
-                      <th style="padding: 8px 10px; text-align: center;">Pendientes</th>
-                      <th style="padding: 8px 10px; text-align: center;">% Cumplimiento</th>
-                    </tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                </table>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 14px;">
-              <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #b91c1c; margin: 0 0 8px 0;">Hallazgos Críticos (No Cumplen)</h4>
-              ${findingsHtml}
-            </div>
-
-            <div style="margin-bottom: 14px;">
-              <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #1E3278; margin: 0 0 8px 0;">Evidencias Fotográficas (8cm x 8cm)</h4>
-              ${photosHtml}
-            </div>
-
-            <div style="padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px;">
-              <div style="color: #475569;">
-                Verificación realizada conforme al procedimiento <span style="font-weight: 700; color: #1E3278;">F1345-1346</span>.
-              </div>
-              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma Verificador" style="height: 48px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; padding: 2px 6px;" />` : `<span style="font-style: italic; color: #94a3b8;">Sin firma</span>`}
-            </div>
-          </div>
-        `;
+      function collectAllDiligencedItems(snap) {
+        const rows = [];
+        BLOCKS_CONFIG.forEach((block) => {
+          const bState = (snap.blocks && snap.blocks[block.id]) || state.blocks[block.id];
+          const opLabel = block.alwaysActive ? "Siempre activo" : (bState && bState.active ? "Sí" : "No");
+          block.items.forEach((item) => {
+            const st = (bState && bState.items && bState.items[item.code]) || {};
+            rows.push({
+              blockName: block.name,
+              inOperation: opLabel,
+              code: item.code,
+              desc: item.desc,
+              time: st.time || "-",
+              status: statusLabel(st.status),
+              measuredValue: st.measuredValue || "-",
+              hasPhoto: st.photoDataUrl ? "Sí" : "No",
+              correctiveAction: st.correctiveAction || "-"
+            });
+          });
+        });
+        return rows;
       }
 
       function getSpanishDayName(dateStr) {
@@ -1345,7 +1104,7 @@
           .trim();
       }
 
-      function buildReportPdfFileName(snap) {
+      function buildReportPdfFileName(snap, suffix = "") {
         const now = new Date();
         const hh = String(now.getHours()).padStart(2, "0");
         const mm = String(now.getMinutes()).padStart(2, "0");
@@ -1353,10 +1112,10 @@
         const fecha = sanitizeFilePart(snap.fecha || getTodayISO());
         const hora = `${hh}-${mm}`;
         const dia = getSpanishDayName(snap.fecha || getTodayISO());
-        return `${responsable}-${fecha}-${hora}-${dia}.pdf`;
+        const extra = suffix ? `-${sanitizeFilePart(suffix)}` : "";
+        return `${responsable}-${fecha}-${hora}-${dia}${extra}.pdf`;
       }
 
-      // Helper para cargar imagen y obtener dimensiones naturales sin deformar
       function loadImageInfo(dataUrl) {
         return new Promise((resolve) => {
           if (!dataUrl || !dataUrl.startsWith("data:image/")) {
@@ -1375,7 +1134,6 @@
         });
       }
 
-      // Calcula dimensiones máximas (hasta 80mm x 80mm = 8cm x 8cm) manteniendo relación de aspecto
       function fitImageAspectRatio(natW, natH, maxWmm = 80, maxHmm = 80) {
         if (!natW || !natH) return { drawW: maxWmm, drawH: maxHmm };
         const ratio = natW / natH;
@@ -1388,8 +1146,128 @@
         return { drawW, drawH };
       }
 
-      // Generación vectorial con jsPDF + AutoTable, separando el anexo fotográfico en página aparte
-      async function buildVectorPdfFromSnap(snap) {
+      function appendSignatureBox(doc, snap, startY) {
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 12;
+        let y = startY;
+        if (y > pageHeight - 36) {
+          doc.addPage();
+          y = 18;
+        }
+        const boxH = 26;
+        doc.setDrawColor(203, 213, 225);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(margin, y, pageWidth - margin * 2, boxH, 2, 2, "FD");
+
+        doc.setTextColor(30, 50, 120);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.text("FIRMA VERIFICADOR DE CALIDAD", margin + 3.5, y + 5.5);
+
+        doc.setTextColor(15, 23, 42);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(`Responsable / Verificador: ${snap.responsable}`, margin + 3.5, y + 11.5);
+        doc.text("Verificación realizada conforme al procedimiento F1345-1346.", margin + 3.5, y + 17.5);
+
+        if (snap.signatureDataUrl && snap.signatureDataUrl.startsWith("data:image/")) {
+          try {
+            doc.addImage(snap.signatureDataUrl, "PNG", pageWidth - margin - 46, y + 3, 42, 14);
+            doc.setFontSize(7.5);
+            doc.setTextColor(51, 65, 85);
+            doc.text(snap.responsable, pageWidth - margin - 25, y + 21.5, { align: "center" });
+          } catch (_) {
+            doc.text("Firma digital registrada", pageWidth - margin - 3.5, y + 13, { align: "right" });
+          }
+        } else {
+          doc.setTextColor(148, 163, 184);
+          doc.setFont("helvetica", "italic");
+          doc.text("Sin firma registrada", pageWidth - margin - 3.5, y + 11.5, { align: "right" });
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(71, 85, 105);
+          doc.text(snap.responsable, pageWidth - margin - 3.5, y + 17.5, { align: "right" });
+        }
+      }
+
+      async function appendPhotosAnnexPage(doc, snap) {
+        const allPhotos = collectEvidencePhotos();
+        if (allPhotos.length === 0) return;
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 12;
+
+        doc.addPage();
+        doc.setFillColor(30, 50, 120);
+        doc.rect(margin, 10, pageWidth - margin * 2, 13, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("ANEXO DE EVIDENCIAS FOTOGRÁFICAS", margin + 4, 18);
+
+        const loadedPhotos = await Promise.all(allPhotos.map((p) => loadImageInfo(p.photoDataUrl)));
+        const maxBoxMm = 80;
+        const cellPadMm = 4;
+        const photoColWidth = maxBoxMm + cellPadMm * 2;
+        const descColWidth = pageWidth - margin * 2 - 42 - photoColWidth;
+
+        const photoRows = allPhotos.map((p) => [
+          `${p.block}
+${p.code}
+Estado: ${p.status}
+Hora: ${p.time}`,
+          `Ítem: ${p.desc}
+Acción / Observación: ${p.correctiveAction}`,
+          ""
+        ]);
+
+        doc.autoTable({
+          startY: 26,
+          margin: { left: margin, right: margin },
+          theme: "grid",
+          head: [["Bloque / Código", "Detalle del Ítem", "Evidencia Fotográfica"]],
+          body: photoRows,
+          styles: {
+            font: "helvetica",
+            fontSize: 8,
+            cellPadding: 2.5,
+            textColor: [30, 41, 59],
+            lineColor: [203, 213, 225],
+            minCellHeight: maxBoxMm + cellPadMm * 2,
+            valign: "middle"
+          },
+          headStyles: {
+            fillColor: [30, 50, 120],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+            halign: "center",
+            minCellHeight: 8
+          },
+          columnStyles: {
+            0: { cellWidth: 42, fontStyle: "bold" },
+            1: { cellWidth: descColWidth },
+            2: { cellWidth: photoColWidth, halign: "center" }
+          },
+          didDrawCell: (data) => {
+            if (data.section === "body" && data.column.index === 2) {
+              const info = loadedPhotos[data.row.index];
+              if (info && info.dataUrl) {
+                try {
+                  const { drawW, drawH } = fitImageAspectRatio(info.width, info.height, maxBoxMm, maxBoxMm);
+                  const xPos = data.cell.x + (data.cell.width - drawW) / 2;
+                  const yPos = data.cell.y + (data.cell.height - drawH) / 2;
+                  doc.addImage(info.dataUrl, info.format, xPos, yPos, drawW, drawH);
+                } catch (_) {}
+              }
+            }
+          }
+        });
+
+        appendSignatureBox(doc, snap, doc.lastAutoTable.finalY + 7);
+      }
+
+      // 1) Informe Gerencial para enviar a la carpeta de Drive
+      async function buildManagerialPdfForDrive(snap) {
         if (!window.jspdf || typeof window.jspdf.jsPDF !== "function") {
           throw new Error("La librería jsPDF no cargó. Verifica tu conexión a internet.");
         }
@@ -1401,18 +1279,16 @@
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 12;
 
-        // Encabezado corporativo
         doc.setFillColor(30, 50, 120);
         doc.rect(margin, 10, pageWidth - margin * 2, 16, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        doc.text("COLOMBINA · REPORTE GERENCIAL DE TURNO", margin + 4, 17);
+        doc.text("COLOMBINA · INFORME GERENCIAL DE TURNO", margin + 4, 17);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.text("Verificación de Proceso y Calidad en Planta", margin + 4, 22.5);
 
-        // Cuadro de cumplimiento global a la derecha
         doc.setFont("helvetica", "bold");
         doc.setFontSize(13);
         doc.text(`${m.pctGlobal.toFixed(1)}%`, pageWidth - margin - 4, 17.5, { align: "right" });
@@ -1420,7 +1296,6 @@
         doc.setFontSize(7.5);
         doc.text("Cumplimiento (Meta >= 95%)", pageWidth - margin - 4, 22.5, { align: "right" });
 
-        // Datos de identificación y novedades
         doc.autoTable({
           startY: 29,
           margin: { left: margin, right: margin },
@@ -1457,7 +1332,6 @@
           ]
         });
 
-        // Consolidado por Sector / Línea
         let currentY = doc.lastAutoTable.finalY + 6;
         doc.setTextColor(30, 50, 120);
         doc.setFont("helvetica", "bold");
@@ -1493,7 +1367,6 @@
           }
         });
 
-        // Hallazgos Críticos
         currentY = doc.lastAutoTable.finalY + 6;
         if (currentY > pageHeight - 45) {
           doc.addPage();
@@ -1532,103 +1405,115 @@
           });
         }
 
-        // Cierre del informe principal: nota de procedimiento F1345-1346 y firma
-        let footerY = doc.lastAutoTable.finalY + 8;
-        if (footerY > pageHeight - 28) {
-          doc.addPage();
-          footerY = 18;
-        }
-
-        doc.setDrawColor(203, 213, 225);
-        doc.line(margin, footerY, pageWidth - margin, footerY);
-
-        doc.setTextColor(51, 65, 85);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
-        doc.text("Verificación realizada conforme al procedimiento F1345-1346.", margin, footerY + 7);
-
-        if (snap.signatureDataUrl && snap.signatureDataUrl.startsWith("data:image/")) {
-          try {
-            doc.addImage(snap.signatureDataUrl, "PNG", pageWidth - margin - 46, footerY + 2, 44, 16);
-          } catch (_) {
-            doc.text("Firma digital registrada.", pageWidth - margin, footerY + 7, { align: "right" });
-          }
-        } else {
-          doc.setTextColor(148, 163, 184);
-          doc.text("Sin firma registrada", pageWidth - margin, footerY + 7, { align: "right" });
-        }
-
-        // Anexo de Evidencias Fotográficas en página aparte
-        const allPhotos = collectEvidencePhotos();
-        if (allPhotos.length > 0) {
-          doc.addPage();
-
-          doc.setFillColor(30, 50, 120);
-          doc.rect(margin, 10, pageWidth - margin * 2, 13, "F");
-          doc.setTextColor(255, 255, 255);
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(11);
-          doc.text("ANEXO DE EVIDENCIAS FOTOGRÁFICAS (MAX. 8CM X 8CM)", margin + 4, 18);
-
-          const loadedPhotos = await Promise.all(allPhotos.map((p) => loadImageInfo(p.photoDataUrl)));
-          const maxBoxMm = 80; // 8cm x 8cm límite máximo sin deformar
-          const cellPadMm = 4;
-          const photoColWidth = maxBoxMm + cellPadMm * 2;
-          const descColWidth = pageWidth - margin * 2 - 42 - photoColWidth;
-
-          const photoRows = allPhotos.map((p) => [
-            `${p.block}\n${p.code}\nEstado: ${p.status}\nHora: ${p.time}`,
-            `Ítem: ${p.desc}\nDato: ${p.measuredValue}\nAcción / Obs.: ${p.correctiveAction}`,
-            ""
-          ]);
-
-          doc.autoTable({
-            startY: 26,
-            margin: { left: margin, right: margin },
-            theme: "grid",
-            head: [["Bloque / Código", "Detalle del Ítem", "Evidencia Fotográfica"]],
-            body: photoRows,
-            styles: {
-              font: "helvetica",
-              fontSize: 8,
-              cellPadding: 2.5,
-              textColor: [30, 41, 59],
-              lineColor: [203, 213, 225],
-              minCellHeight: maxBoxMm + cellPadMm * 2,
-              valign: "middle"
-            },
-            headStyles: {
-              fillColor: [30, 50, 120],
-              textColor: [255, 255, 255],
-              fontStyle: "bold",
-              halign: "center",
-              minCellHeight: 8
-            },
-            columnStyles: {
-              0: { cellWidth: 42, fontStyle: "bold" },
-              1: { cellWidth: descColWidth },
-              2: { cellWidth: photoColWidth, halign: "center" }
-            },
-            didDrawCell: (data) => {
-              if (data.section === "body" && data.column.index === 2) {
-                const info = loadedPhotos[data.row.index];
-                if (info && info.dataUrl) {
-                  try {
-                    const { drawW, drawH } = fitImageAspectRatio(info.width, info.height, maxBoxMm, maxBoxMm);
-                    const xPos = data.cell.x + (data.cell.width - drawW) / 2;
-                    const yPos = data.cell.y + (data.cell.height - drawH) / 2;
-                    doc.addImage(info.dataUrl, info.format, xPos, yPos, drawW, drawH);
-                  } catch (_) {}
-                }
-              }
-            }
-          });
-        }
+        appendSignatureBox(doc, snap, doc.lastAutoTable.finalY + 7);
+        await appendPhotosAnnexPage(doc, snap);
 
         const blob = doc.output("blob");
         const dataUri = doc.output("datauristring");
         const base64Pdf = dataUri.includes(",") ? dataUri.split(",")[1] : "";
         return { blob, base64Pdf };
+      }
+
+      // 2) Informe detallado del rutero para descargar en el dispositivo
+      async function buildDetailedRuteroPdfForDevice(snap) {
+        if (!window.jspdf || typeof window.jspdf.jsPDF !== "function") {
+          throw new Error("La librería jsPDF no cargó. Verifica tu conexión a internet.");
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+        const m = snap.metrics;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 12;
+
+        doc.setFillColor(30, 50, 120);
+        doc.rect(margin, 10, pageWidth - margin * 2, 16, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("COLOMBINA · INFORME DETALLADO DEL RUTERO", margin + 4, 17);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text("Registro Completo de Proceso y Calidad en Planta", margin + 4, 22.5);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.text(`${m.pctGlobal.toFixed(1)}%`, pageWidth - margin - 4, 17.5, { align: "right" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.text("Cumplimiento (Meta >= 95%)", pageWidth - margin - 4, 22.5, { align: "right" });
+
+        doc.autoTable({
+          startY: 29,
+          margin: { left: margin, right: margin },
+          theme: "grid",
+          styles: { font: "helvetica", fontSize: 8.5, cellPadding: 2.5, textColor: [30, 41, 59], lineColor: [203, 213, 225] },
+          headStyles: { fillColor: [241, 245, 249], textColor: [30, 50, 120], fontStyle: "bold" },
+          body: [
+            [
+              { content: "Responsable / Verificador:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              snap.responsable,
+              { content: "Fecha:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              snap.fecha
+            ],
+            [
+              { content: "Turno:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              snap.turno,
+              { content: "Evaluados / Aplicables:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              `${m.totalEvaluados} de ${m.totalAplicables} (${m.totalCumple} Cumplen · ${m.totalNoCumple} No Cumplen · ${m.totalNA} N/A · ${m.totalPendientes} Pend.)`
+            ],
+            [
+              { content: "Incidentes de Seguridad:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              { content: `${snap.incidenteSeguridad}${snap.seguridadExplicacion ? " — " + snap.seguridadExplicacion : ""}`, colSpan: 3 }
+            ],
+            [
+              { content: "Casi Incidentes de Calidad:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              { content: `${snap.casiIncidenteCalidad}${snap.calidadExplicacion ? " — " + snap.calidadExplicacion : ""}`, colSpan: 3 }
+            ],
+            [
+              { content: "Novedades del Turno:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              { content: snap.novedadesTurno || "Sin novedades registradas.", colSpan: 3 }
+            ]
+          ]
+        });
+
+        const allDiligenced = collectAllDiligencedItems(snap).map((r) => [
+          r.blockName,
+          r.inOperation,
+          r.code,
+          r.desc,
+          r.time,
+          r.status,
+          r.measuredValue,
+          r.hasPhoto,
+          r.correctiveAction
+        ]);
+
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 5,
+          margin: { left: margin, right: margin },
+          theme: "grid",
+          head: [["Bloque", "Op.", "Código", "Ítem", "Hora", "Estado", "Dato Medido", "Foto", "Acción / Observación"]],
+          body: allDiligenced,
+          styles: { font: "helvetica", fontSize: 7.2, cellPadding: 1.8, textColor: [30, 41, 59], lineColor: [203, 213, 225] },
+          headStyles: { fillColor: [30, 50, 120], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+          columnStyles: {
+            0: { cellWidth: 22, fontStyle: "bold" },
+            1: { cellWidth: 13, halign: "center" },
+            2: { cellWidth: 14, fontStyle: "bold" },
+            3: { cellWidth: 44 },
+            4: { cellWidth: 12, halign: "center" },
+            5: { cellWidth: 16, halign: "center" },
+            6: { cellWidth: 18 },
+            7: { cellWidth: 10, halign: "center" },
+            8: { cellWidth: pageWidth - margin * 2 - 22 - 13 - 14 - 44 - 12 - 16 - 18 - 10 }
+          }
+        });
+
+        appendSignatureBox(doc, snap, doc.lastAutoTable.finalY + 7);
+        await appendPhotosAnnexPage(doc, snap);
+
+        return doc.output("blob");
       }
 
       function triggerBlobDownload(blob, fileName) {
@@ -1642,21 +1527,23 @@
         setTimeout(() => URL.revokeObjectURL(url), 1500);
       }
 
-      async function generateAndUploadPdf(snap) {
+      async function handleEnviarClick() {
+        if (!validateBeforeExport()) return;
+        const snap = collectSnapshot();
         const fileName = buildReportPdfFileName(snap);
-        showToast("Generando PDF y enviando a Drive...", "info");
+        showToast("Generando informe gerencial y enviando a Drive...", "info");
 
         let pdfData;
         try {
-          pdfData = await buildVectorPdfFromSnap(snap);
+          pdfData = await buildManagerialPdfForDrive(snap);
         } catch (err) {
-          showToast(`No se pudo generar el PDF: ${err && err.message ? err.message : "error interno"}.`, "error");
+          showToast(`Error al generar el informe gerencial: ${err && err.message ? err.message : "error interno"}.`, "error");
           return;
         }
 
         if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PEGA_AQUI_TU_URL_EXEC")) {
           triggerBlobDownload(pdfData.blob, fileName);
-          showToast(`Falta configurar APPS_SCRIPT_URL. Se descargó ${fileName} localmente.`, "warning");
+          showToast(`Falta configurar APPS_SCRIPT_URL. Se descargó ${fileName}.`, "warning");
           return;
         }
 
@@ -1668,114 +1555,29 @@
           });
           const result = await response.json();
           if (result.ok) {
-            showToast(`Documento enviado a Drive: ${fileName}`, "success");
+            showToast(`Informe gerencial enviado a Drive: ${fileName}`, "success");
           } else {
-            throw new Error(result.error || "Error al guardar en Drive");
+            throw new Error(result.error || "Error al subir a Drive");
           }
         } catch (_) {
           triggerBlobDownload(pdfData.blob, fileName);
-          showToast(`No se pudo conectar a Drive; se descargó ${fileName} en el equipo.`, "warning");
+          showToast(`No se pudo subir a Drive; se descargó ${fileName} en el dispositivo.`, "warning");
         }
       }
 
-      function openManagerialReportModal() {
+      async function handleCrearInformeRuteroClick() {
         if (!validateBeforeExport()) return;
         const snap = collectSnapshot();
-        openModal({
-          title: "Reporte Gerencial del Turno",
-          bodyHtml: buildManagerialReportHtml(snap),
-          buttons: [
-            {
-              label: "Guardar PDF en Nube",
-              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white",
-              closeOnClick: false,
-              onClick: () => generateAndUploadPdf(snap)
-            },
-            {
-              label: "Cerrar",
-              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800"
-            }
-          ]
-        });
-      }
+        const fileName = buildReportPdfFileName(snap, "Rutero");
+        showToast("Generando informe detallado del rutero...", "info");
 
-      function openHistoryModal() {
-        const list = getHistory();
-        const bodyHtml =
-          list.length === 0
-            ? `<p class="text-sm text-slate-500 text-center py-6">Aún no hay turnos guardados en el historial de este dispositivo.</p>`
-            : `<div class="space-y-2.5">
-                ${list
-                  .map(
-                    (entry) => `
-                  <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <div class="text-xs font-extrabold text-colombina-navy">${escapeHtml(entry.fecha)} · ${escapeHtml(entry.turno)}</div>
-                      <div class="text-xs font-semibold text-slate-700">${escapeHtml(entry.responsable)}</div>
-                      <div class="text-[11px] text-slate-500">Cumplimiento: <b>${entry.metrics.pctGlobal.toFixed(1)}%</b> · No cumple: <b>${entry.metrics.totalNoCumple}</b> · Guardado: ${escapeHtml(entry.savedAt)}</div>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                      <button type="button" data-load-id="${entry.id}" class="hist-load-btn touch-btn px-3 py-1.5 rounded-lg bg-colombina-navy text-white text-xs font-bold">Cargar</button>
-                      <button type="button" data-del-id="${entry.id}" class="hist-del-btn touch-btn px-2.5 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-xs font-bold">Eliminar</button>
-                    </div>
-                  </div>
-                `
-                  )
-                  .join("")}
-              </div>`;
-
-        openModal({
-          title: "Historial de Turnos (localStorage)",
-          bodyHtml,
-          buttons: [
-            {
-              label: "Cerrar",
-              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800"
-            }
-          ]
-        });
-
-        document.querySelectorAll(".hist-load-btn").forEach((b) => {
-          b.addEventListener("click", () => {
-            const found = getHistory().find((x) => x.id === b.dataset.loadId);
-            if (found) {
-              closeModal();
-              applySnapshot(found);
-            }
-          });
-        });
-
-        document.querySelectorAll(".hist-del-btn").forEach((b) => {
-          b.addEventListener("click", () => {
-            const filtered = getHistory().filter((x) => x.id !== b.dataset.delId);
-            saveHistory(filtered);
-            closeModal();
-            openHistoryModal();
-            showToast("Registro eliminado del historial.", "info");
-          });
-        });
-      }
-
-      function resetForm() {
-        document.getElementById("responsableSelect").value = "";
-        document.getElementById("fechaInput").value = getTodayISO();
-        document.getElementById("turnoSelect").value = "Turno 1 (Nocturno)";
-        document.getElementById("incidenteSeguridadSelect").value = "Sin novedad";
-        document.getElementById("seguridadExplicacionInput").value = "";
-        document.getElementById("casiIncidenteCalidadSelect").value = "Sin novedad";
-        document.getElementById("calidadExplicacionInput").value = "";
-        document.getElementById("novedadesTurnoInput").value = "";
-
-        const sigCanvas = document.getElementById("signatureCanvas");
-        const ctx = sigCanvas.getContext("2d");
-        const rect = sigCanvas.getBoundingClientRect();
-        ctx.clearRect(0, 0, rect.width, rect.height);
-        hasSignature = false;
-
-        initState();
-        syncIncidentStyles();
-        renderBlocks();
-        showToast("Formulario reiniciado para un nuevo turno.", "info");
+        try {
+          const blob = await buildDetailedRuteroPdfForDevice(snap);
+          triggerBlobDownload(blob, fileName);
+          showToast(`Informe del rutero descargado: ${fileName}`, "success");
+        } catch (err) {
+          showToast(`No se pudo crear el informe del rutero: ${err && err.message ? err.message : "error interno"}.`, "error");
+        }
       }
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -1783,7 +1585,6 @@
         initState();
         renderBlocks();
         setupSignatureCanvas();
-        updateHistoryBadge();
 
         document.getElementById("customModalCloseBtn").addEventListener("click", closeModal);
         document.getElementById("customModal").addEventListener("click", (e) => {
@@ -1793,35 +1594,8 @@
         document.getElementById("incidenteSeguridadSelect").addEventListener("change", syncIncidentStyles);
         document.getElementById("seguridadExplicacionInput").addEventListener("input", syncIncidentStyles);
 
-        document.getElementById("btnGuardarHistorial").addEventListener("click", () => {
-          if (!validateBeforeExport()) return;
-          const snap = collectSnapshot();
-          const list = getHistory();
-          list.unshift(snap);
-          saveHistory(list.slice(0, 50));
-          showToast("Turno guardado en el historial local.", "success");
-        });
-
-        document.getElementById("btnHistorial").addEventListener("click", openHistoryModal);
-        document.getElementById("btnReporteGerencial").addEventListener("click", openManagerialReportModal);
-
-        document.getElementById("btnNuevoTurno").addEventListener("click", () => {
-          openModal({
-            title: "Limpiar formulario",
-            bodyHtml: "<p>¿Desea limpiar todos los campos y reiniciar los 12 bloques del turno actual?</p>",
-            buttons: [
-              {
-                label: "Cancelar",
-                className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800"
-              },
-              {
-                label: "Sí, limpiar",
-                className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-red-600 hover:bg-red-700 text-white",
-                onClick: resetForm
-              }
-            ]
-          });
-        });
+        document.getElementById("btnEnviar").addEventListener("click", handleEnviarClick);
+        document.getElementById("btnCrearInformeRutero").addEventListener("click", handleCrearInformeRuteroClick);
       });
     })();
   </script>
