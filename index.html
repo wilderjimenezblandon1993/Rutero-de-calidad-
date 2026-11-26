@@ -1153,14 +1153,18 @@
         const rows = m.perBlock
           .map(
             (b) => `
-            <tr class="border-b border-slate-200">
-              <td class="py-2 px-2.5 font-bold text-slate-800">${escapeHtml(b.name)}</td>
-              <td class="py-2 px-2.5 text-center">${b.inOperation ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">En operación</span>' : '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-600">No aplica</span>'}</td>
-              <td class="py-2 px-2.5 text-center font-bold text-emerald-700">${b.cumple}</td>
-              <td class="py-2 px-2.5 text-center font-bold text-red-700">${b.noCumple}</td>
-              <td class="py-2 px-2.5 text-center text-slate-600">${b.na}</td>
-              <td class="py-2 px-2.5 text-center text-amber-700">${b.pendientes}</td>
-              <td class="py-2 px-2.5 text-center font-extrabold ${b.evaluados > 0 && b.pctCumplimiento < 95 ? "text-amber-700" : "text-colombina-navy"}">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 8px 10px; font-weight: 700; color: #1e293b;">${escapeHtml(b.name)}</td>
+              <td style="padding: 8px 10px; text-align: center;">${
+                b.inOperation
+                  ? '<span style="display:inline-block; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:700; background:#d1fae5; color:#065f46;">En operación</span>'
+                  : '<span style="display:inline-block; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:700; background:#e2e8f0; color:#475569;">No aplica</span>'
+              }</td>
+              <td style="padding: 8px 10px; text-align: center; font-weight: 700; color: #047857;">${b.cumple}</td>
+              <td style="padding: 8px 10px; text-align: center; font-weight: 700; color: #b91c1c;">${b.noCumple}</td>
+              <td style="padding: 8px 10px; text-align: center; color: #475569;">${b.na}</td>
+              <td style="padding: 8px 10px; text-align: center; color: #b45309;">${b.pendientes}</td>
+              <td style="padding: 8px 10px; text-align: center; font-weight: 800; color: ${b.evaluados > 0 && b.pctCumplimiento < 95 ? "#b45309" : "#1E3278"};">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
             </tr>
           `
           )
@@ -1169,27 +1173,27 @@
         const allFindings = m.perBlock.flatMap((b) => b.findings);
         const findingsHtml =
           allFindings.length > 0
-            ? `<div class="overflow-x-auto border border-red-200 rounded-xl">
-                <table class="w-full text-xs text-left">
-                  <thead class="bg-red-700 text-white">
+            ? `<div style="border: 1px solid #fecaca; border-radius: 12px; overflow: hidden;">
+                <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
+                  <thead style="background: #b91c1c; color: #ffffff;">
                     <tr>
-                      <th class="py-2 px-2.5">Bloque</th>
-                      <th class="py-2 px-2.5">Código</th>
-                      <th class="py-2 px-2.5">Ítem</th>
-                      <th class="py-2 px-2.5">Dato</th>
-                      <th class="py-2 px-2.5">Acción Correctiva</th>
+                      <th style="padding: 8px 10px;">Bloque</th>
+                      <th style="padding: 8px 10px;">Código</th>
+                      <th style="padding: 8px 10px;">Ítem</th>
+                      <th style="padding: 8px 10px;">Dato</th>
+                      <th style="padding: 8px 10px;">Acción Correctiva</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-red-100 bg-red-50/40">
+                  <tbody style="background: #fef2f2;">
                     ${allFindings
                       .map(
                         (f) => `
-                      <tr>
-                        <td class="py-2 px-2.5 font-semibold">${escapeHtml(f.block)}</td>
-                        <td class="py-2 px-2.5 font-mono font-bold text-red-800">${escapeHtml(f.code)}</td>
-                        <td class="py-2 px-2.5">${escapeHtml(f.desc)}</td>
-                        <td class="py-2 px-2.5">${escapeHtml(f.measuredValue)}</td>
-                        <td class="py-2 px-2.5 font-semibold text-red-900">${escapeHtml(f.correctiveAction)}</td>
+                      <tr style="border-top: 1px solid #fee2e2;">
+                        <td style="padding: 8px 10px; font-weight: 600;">${escapeHtml(f.block)}</td>
+                        <td style="padding: 8px 10px; font-family: monospace; font-weight: 700; color: #991b1b;">${escapeHtml(f.code)}</td>
+                        <td style="padding: 8px 10px;">${escapeHtml(f.desc)}</td>
+                        <td style="padding: 8px 10px;">${escapeHtml(f.measuredValue)}</td>
+                        <td style="padding: 8px 10px; font-weight: 600; color: #7f1d1d;">${escapeHtml(f.correctiveAction)}</td>
                       </tr>
                     `
                       )
@@ -1197,47 +1201,47 @@
                   </tbody>
                 </table>
               </div>`
-            : `<p class="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-xl p-3">Sin hallazgos críticos ("No cumple") registrados en el turno.</p>`;
+            : `<p style="font-size: 12px; color: #047857; font-weight: 600; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px; margin: 0;">Sin hallazgos críticos ("No cumple") registrados en el turno.</p>`;
 
         return `
-          <div id="printableReportArea" class="space-y-4 text-slate-800">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
+          <div id="printableReportArea" style="background: #ffffff; color: #1e293b; font-family: Arial, Helvetica, sans-serif; padding: 12px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 14px;">
               <div>
-                <div class="text-xs font-extrabold uppercase tracking-wider text-colombina-navy">Colombina · Reporte Gerencial de Turno</div>
-                <div class="text-xs text-slate-600 mt-0.5">
+                <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #1E3278;">Colombina · Reporte Gerencial de Turno</div>
+                <div style="font-size: 12px; color: #475569; margin-top: 4px;">
                   <b>Responsable:</b> ${escapeHtml(snap.responsable)} · <b>Fecha:</b> ${escapeHtml(snap.fecha)} · <b>Turno:</b> ${escapeHtml(snap.turno)}
                 </div>
               </div>
-              <div class="text-right">
-                <div class="text-xs text-slate-500">Cumplimiento Global (Meta ≥ 95%)</div>
-                <div class="text-xl font-extrabold text-colombina-navy">${m.pctGlobal.toFixed(1)}%</div>
+              <div style="text-align: right;">
+                <div style="font-size: 11px; color: #64748b;">Cumplimiento Global (Meta ≥ 95%)</div>
+                <div style="font-size: 20px; font-weight: 800; color: #1E3278;">${m.pctGlobal.toFixed(1)}%</div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <div class="font-bold text-slate-700">Seguridad: ${escapeHtml(snap.incidenteSeguridad)}</div>
-                <div class="text-slate-600 mt-0.5">${escapeHtml(snap.seguridadExplicacion || "Sin detalles adicionales.")}</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; margin-bottom: 14px;">
+              <div style="border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; padding: 10px;">
+                <div style="font-weight: 700; color: #334155;">Seguridad: ${escapeHtml(snap.incidenteSeguridad)}</div>
+                <div style="color: #475569; margin-top: 3px;">${escapeHtml(snap.seguridadExplicacion || "Sin detalles adicionales.")}</div>
               </div>
-              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <div class="font-bold text-slate-700">Calidad: ${escapeHtml(snap.casiIncidenteCalidad)}</div>
-                <div class="text-slate-600 mt-0.5">${escapeHtml(snap.calidadExplicacion || "Sin detalles adicionales.")}</div>
+              <div style="border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; padding: 10px;">
+                <div style="font-weight: 700; color: #334155;">Calidad: ${escapeHtml(snap.casiIncidenteCalidad)}</div>
+                <div style="color: #475569; margin-top: 3px;">${escapeHtml(snap.calidadExplicacion || "Sin detalles adicionales.")}</div>
               </div>
             </div>
 
-            <div>
-              <h4 class="text-xs font-extrabold uppercase tracking-wider text-colombina-navy mb-2">Consolidado por Sector / Línea</h4>
-              <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                <table class="w-full text-xs text-left">
-                  <thead class="bg-colombina-navy text-white">
+            <div style="margin-bottom: 14px;">
+              <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #1E3278; margin: 0 0 8px 0;">Consolidado por Sector / Línea</h4>
+              <div style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+                <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
+                  <thead style="background: #1E3278; color: #ffffff;">
                     <tr>
-                      <th class="py-2 px-2.5">Sector / Línea</th>
-                      <th class="py-2 px-2.5 text-center">Estado Operación</th>
-                      <th class="py-2 px-2.5 text-center">Cumple</th>
-                      <th class="py-2 px-2.5 text-center">No Cumple</th>
-                      <th class="py-2 px-2.5 text-center">N/A</th>
-                      <th class="py-2 px-2.5 text-center">Pendientes</th>
-                      <th class="py-2 px-2.5 text-center">% Cumplimiento</th>
+                      <th style="padding: 8px 10px;">Sector / Línea</th>
+                      <th style="padding: 8px 10px; text-align: center;">Estado Operación</th>
+                      <th style="padding: 8px 10px; text-align: center;">Cumple</th>
+                      <th style="padding: 8px 10px; text-align: center;">No Cumple</th>
+                      <th style="padding: 8px 10px; text-align: center;">N/A</th>
+                      <th style="padding: 8px 10px; text-align: center;">Pendientes</th>
+                      <th style="padding: 8px 10px; text-align: center;">% Cumplimiento</th>
                     </tr>
                   </thead>
                   <tbody>${rows}</tbody>
@@ -1245,16 +1249,16 @@
               </div>
             </div>
 
-            <div>
-              <h4 class="text-xs font-extrabold uppercase tracking-wider text-red-700 mb-2">Hallazgos Críticos (No Cumplen)</h4>
+            <div style="margin-bottom: 14px;">
+              <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #b91c1c; margin: 0 0 8px 0;">Hallazgos Críticos (No Cumplen)</h4>
               ${findingsHtml}
             </div>
 
-            <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div class="text-slate-600">
-                Verificación realizada conforme al procedimiento <span class="font-bold text-colombina-navy">F1345-1346</span>.
+            <div style="padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px;">
+              <div style="color: #475569;">
+                Verificación realizada conforme al procedimiento <span style="font-weight: 700; color: #1E3278;">F1345-1346</span>.
               </div>
-              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma Verificador" class="h-12 border border-slate-200 rounded-lg bg-white px-2" />` : `<span class="italic text-slate-400">Sin firma</span>`}
+              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma Verificador" style="height: 48px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; padding: 2px 6px;" />` : `<span style="font-style: italic; color: #94a3b8;">Sin firma</span>`}
             </div>
           </div>
         `;
@@ -1357,8 +1361,8 @@
       function sanitizeFilePart(value) {
         return String(value || "")
           .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[\\/:*?"<>|]+/g, "-")
+          .replace(/[̀-ͯ]/g, "")
+          .replace(/[\/:*?"<>|]+/g, "-")
           .replace(/\s+/g, " ")
           .trim();
       }
@@ -1374,33 +1378,129 @@
         return `${responsable}-${fecha}-${hora}-${dia}.pdf`;
       }
 
-      async function renderReportToPdfWorker(reportEl, fileName) {
-        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        const rect = reportEl.getBoundingClientRect();
+      function buildCleanPdfHtml(snap) {
+        const m = snap.metrics;
+        const rows = m.perBlock
+          .map(
+            (b) => `
+            <tr>
+              <td style="padding:6px 8px; border:1px solid #cbd5e1; font-weight:700;">${escapeHtml(b.name)}</td>
+              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center;">${b.inOperation ? "En operación" : "No aplica"}</td>
+              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center; color:#047857; font-weight:700;">${b.cumple}</td>
+              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center; color:#b91c1c; font-weight:700;">${b.noCumple}</td>
+              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center;">${b.na}</td>
+              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center;">${b.pendientes}</td>
+              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center; font-weight:800;">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
+            </tr>`
+          )
+          .join("");
+
+        const allFindings = m.perBlock.flatMap((b) => b.findings);
+        const findingsSection =
+          allFindings.length > 0
+            ? `<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:6px;">
+                <thead>
+                  <tr style="background:#b91c1c; color:#ffffff;">
+                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Bloque</th>
+                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Código</th>
+                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Ítem</th>
+                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Dato</th>
+                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Acción Correctiva</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${allFindings
+                    .map(
+                      (f) => `
+                    <tr style="background:#fef2f2;">
+                      <td style="padding:6px 8px; border:1px solid #fecaca;">${escapeHtml(f.block)}</td>
+                      <td style="padding:6px 8px; border:1px solid #fecaca; font-weight:700;">${escapeHtml(f.code)}</td>
+                      <td style="padding:6px 8px; border:1px solid #fecaca;">${escapeHtml(f.desc)}</td>
+                      <td style="padding:6px 8px; border:1px solid #fecaca;">${escapeHtml(f.measuredValue)}</td>
+                      <td style="padding:6px 8px; border:1px solid #fecaca; font-weight:700;">${escapeHtml(f.correctiveAction)}</td>
+                    </tr>`
+                    )
+                    .join("")}
+                </tbody>
+              </table>`
+            : `<div style="font-size:11px; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:8px 10px; border-radius:6px; margin-top:6px;">Sin hallazgos críticos ("No cumple") registrados en el turno.</div>`;
+
+        return `
+          <div style="width:740px; background:#ffffff; color:#1e293b; font-family:Arial, Helvetica, sans-serif; padding:16px; box-sizing:border-box;">
+            <div style="border-bottom:2px solid #1E3278; padding-bottom:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:15px; font-weight:800; color:#1E3278;">COLOMBINA · REPORTE GERENCIAL DE TURNO</div>
+                <div style="font-size:11px; color:#334155; margin-top:4px;">
+                  <b>Responsable:</b> ${escapeHtml(snap.responsable)} | <b>Fecha:</b> ${escapeHtml(snap.fecha)} | <b>Turno:</b> ${escapeHtml(snap.turno)}
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:10px; color:#64748b;">Cumplimiento Global (Meta ≥ 95%)</div>
+                <div style="font-size:20px; font-weight:800; color:#1E3278;">${m.pctGlobal.toFixed(1)}%</div>
+              </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:12px;">
+              <tr>
+                <td style="width:50%; padding:8px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top;">
+                  <b>Seguridad:</b> ${escapeHtml(snap.incidenteSeguridad)}<br/>
+                  <span style="color:#475569;">${escapeHtml(snap.seguridadExplicacion || "Sin detalles adicionales.")}</span>
+                </td>
+                <td style="width:50%; padding:8px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top;">
+                  <b>Calidad:</b> ${escapeHtml(snap.casiIncidenteCalidad)}<br/>
+                  <span style="color:#475569;">${escapeHtml(snap.calidadExplicacion || "Sin detalles adicionales.")}</span>
+                </td>
+              </tr>
+            </table>
+
+            <div style="font-size:11px; font-weight:800; color:#1E3278; text-transform:uppercase; margin-bottom:6px;">Consolidado por Sector / Línea</div>
+            <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:14px;">
+              <thead>
+                <tr style="background:#1E3278; color:#ffffff;">
+                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:left;">Sector / Línea</th>
+                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">Estado Operación</th>
+                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">Cumple</th>
+                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">No Cumple</th>
+                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">N/A</th>
+                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">Pendientes</th>
+                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">% Cumplimiento</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+
+            <div style="font-size:11px; font-weight:800; color:#b91c1c; text-transform:uppercase;">Hallazgos Críticos (No Cumplen)</div>
+            ${findingsSection}
+
+            <div style="margin-top:14px; padding-top:10px; border-top:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+              <div>Verificación realizada conforme al procedimiento <b>F1345-1346</b>.</div>
+              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma" style="height:48px; border:1px solid #cbd5e1; padding:2px 6px; background:#ffffff;" />` : `<span>Sin firma registrada</span>`}
+            </div>
+          </div>
+        `;
+      }
+
+      async function generatePdfBase64FromSnap(snap, fileName) {
+        const htmlString = buildCleanPdfHtml(snap);
         const opt = {
           margin: 8,
           filename: fileName,
-          image: { type: "jpeg", quality: 0.92 },
+          image: { type: "jpeg", quality: 0.95 },
           html2canvas: {
             scale: 2,
             useCORS: true,
             backgroundColor: "#ffffff",
-            windowWidth: Math.max(850, Math.ceil(rect.width || 850)),
-            windowHeight: Math.max(600, Math.ceil(reportEl.scrollHeight || 600)),
             scrollX: 0,
-            scrollY: 0
+            scrollY: 0,
+            windowWidth: 800
           },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
         };
-        return html2pdf().set(opt).from(reportEl);
+        const dataUri = await html2pdf().set(opt).from(htmlString, "string").outputPdf("datauristring");
+        return { dataUri, base64Pdf: dataUri.split(",")[1], opt, htmlString };
       }
 
       async function generateAndUploadPdf(snap) {
-        const reportEl = document.getElementById("printableReportArea");
-        if (!reportEl) {
-          showToast("Primero abre el Reporte Gerencial para generar el PDF.", "warning");
-          return;
-        }
         if (typeof html2pdf === "undefined") {
           showToast("No cargó html2pdf. Revisa tu conexión a internet.", "error");
           return;
@@ -1409,13 +1509,10 @@
         const fileName = buildReportPdfFileName(snap);
         showToast("Generando PDF y subiendo a Drive...", "info");
 
-        const worker = await renderReportToPdfWorker(reportEl, fileName);
-        const dataUri = await worker.outputPdf("datauristring");
-        const base64Pdf = dataUri.split(",")[1];
+        const { base64Pdf, opt, htmlString } = await generatePdfBase64FromSnap(snap, fileName);
 
         if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PEGA_AQUI_TU_URL_EXEC")) {
-          const fallbackWorker = await renderReportToPdfWorker(reportEl, fileName);
-          await fallbackWorker.save();
+          await html2pdf().set(opt).from(htmlString, "string").save();
           showToast(`Falta pegar tu URL /exec. Se descargó ${fileName} localmente.`, "warning");
           return;
         }
@@ -1433,8 +1530,7 @@
             throw new Error(result.error || "Error al subir");
           }
         } catch (_) {
-          const fallbackWorker = await renderReportToPdfWorker(reportEl, fileName);
-          await fallbackWorker.save();
+          await html2pdf().set(opt).from(htmlString, "string").save();
           showToast(`No se pudo subir a Drive; se descargó ${fileName}.`, "warning");
         }
       }
@@ -1468,9 +1564,8 @@
                 if (win && area) {
                   win.document.write(`
                     <!DOCTYPE html>
-                    <html><head><title>Reporte Gerencial</title>
-                    <script src="https://cdn.tailwindcss.com"><\/script>
-                    </head><body class="p-6 bg-white">${area.outerHTML}</body></html>
+                    <html><head><title>Reporte Gerencial</title></head>
+                    <body style="padding:20px;background:#ffffff;font-family:Arial,sans-serif;">${area.outerHTML}</body></html>
                   `);
                   win.document.close();
                   setTimeout(() => win.print(), 350);
