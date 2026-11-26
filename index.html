@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Rutero de Verificación de Proceso y Calidad en Planta - Colombina</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -310,6 +311,7 @@
       "use strict";
 
       const STORAGE_KEY = "colombina_rutero_historial_v1";
+      const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4N_sb-9DPDvBKwKAydnfQLH7uqiIN0YPkKGU3H4xVpVazf5BhqQ79SErvGR_Vyc34Mg/exec";
 
       const BLOCKS_CONFIG = [
         {
@@ -1048,7 +1050,7 @@
       }
 
       function downloadXls(filename, htmlContent) {
-        const bom = "\uFEFF";
+        const bom = "﻿";
         const blob = new Blob([bom + htmlContent], { type: "application/vnd.ms-excel;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -1344,6 +1346,83 @@
         showToast("Reporte Gerencial (.xls) descargado.", "success");
       }
 
+      function getSpanishDayName(dateStr) {
+        const parts = (dateStr || "").split("-");
+        if (parts.length !== 3) return "Dia";
+        const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        const days = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
+        return days[dt.getDay()] || "Dia";
+      }
+
+      function sanitizeFilePart(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[\\/:*?"<>|]+/g, "-")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function buildReportPdfFileName(snap) {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mm = String(now.getMinutes()).padStart(2, "0");
+        const responsable = sanitizeFilePart(snap.responsable || "Sin asignar");
+        const fecha = sanitizeFilePart(snap.fecha || getTodayISO());
+        const hora = `${hh}-${mm}`;
+        const dia = getSpanishDayName(snap.fecha || getTodayISO());
+        return `${responsable}-${fecha}-${hora}-${dia}.pdf`;
+      }
+
+      async function generateAndUploadPdf(snap) {
+        const reportEl = document.getElementById("printableReportArea");
+        if (!reportEl) {
+          showToast("Primero abre el Reporte Gerencial para generar el PDF.", "warning");
+          return;
+        }
+        if (typeof html2pdf === "undefined") {
+          showToast("No cargó html2pdf. Revisa tu conexión a internet.", "error");
+          return;
+        }
+
+        const fileName = buildReportPdfFileName(snap);
+        showToast("Generando PDF y subiendo a Drive...", "info");
+
+        const opt = {
+          margin: 8,
+          filename: fileName,
+          image: { type: "jpeg", quality: 0.92 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        };
+
+        const dataUri = await html2pdf().set(opt).from(reportEl).outputPdf("datauristring");
+        const base64Pdf = dataUri.split(",")[1];
+
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PEGA_AQUI_TU_URL_EXEC")) {
+          await html2pdf().set(opt).from(reportEl).save();
+          showToast(`Falta pegar tu URL /exec. Se descargó ${fileName} localmente.`, "warning");
+          return;
+        }
+
+        try {
+          const response = await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ fileName, base64Pdf })
+          });
+          const result = await response.json();
+          if (result.ok) {
+            showToast(`Guardado en Drive: ${fileName}`, "success");
+          } else {
+            throw new Error(result.error || "Error al subir");
+          }
+        } catch (_) {
+          await html2pdf().set(opt).from(reportEl).save();
+          showToast(`No se pudo subir a Drive; se descargó ${fileName}.`, "warning");
+        }
+      }
+
       function openManagerialReportModal() {
         if (!validateBeforeExport()) return;
         const snap = collectSnapshot();
@@ -1351,6 +1430,12 @@
           title: "Reporte Gerencial del Turno",
           bodyHtml: buildManagerialReportHtml(snap),
           buttons: [
+            {
+              label: "Guardar PDF en Nube",
+              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white",
+              closeOnClick: false,
+              onClick: () => generateAndUploadPdf(snap)
+            },
             {
               label: "Descargar Excel (.xls)",
               className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white",
@@ -1368,7 +1453,7 @@
                   win.document.write(`
                     <!DOCTYPE html>
                     <html><head><title>Reporte Gerencial</title>
-                    <script src="https://cdn.tailwindcss.com"></script>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
                     </head><body class="p-6 bg-white">${area.outerHTML}</body></html>
                   `);
                   win.document.close();
