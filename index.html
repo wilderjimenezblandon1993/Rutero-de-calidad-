@@ -1480,8 +1480,25 @@
         `;
       }
 
+      function resolveHtml2Canvas() {
+        if (typeof html2canvas === "function") return html2canvas;
+        if (typeof window.html2canvas === "function") return window.html2canvas;
+        if (typeof html2pdf !== "undefined" && typeof html2pdf.html2canvas === "function") {
+          return html2pdf.html2canvas;
+        }
+        return null;
+      }
+
+      function resolveJsPdfConstructor() {
+        if (window.jspdf && typeof window.jspdf.jsPDF === "function") return window.jspdf.jsPDF;
+        if (typeof window.jsPDF === "function") return window.jsPDF;
+        if (typeof html2pdf !== "undefined" && typeof html2pdf.jsPDF === "function") return html2pdf.jsPDF;
+        return null;
+      }
+
       async function renderCanvasFromCleanHtml(htmlString) {
-        if (typeof html2canvas === "undefined") {
+        const h2c = resolveHtml2Canvas();
+        if (!h2c) {
           throw new Error("html2canvas no disponible");
         }
         const host = document.createElement("div");
@@ -1509,7 +1526,7 @@
         );
 
         try {
-          return await html2canvas(host.firstElementChild || host, {
+          return await h2c(host.firstElementChild || host, {
             scale: 2,
             useCORS: true,
             backgroundColor: "#ffffff",
@@ -1523,57 +1540,61 @@
         }
       }
 
-      async function buildPdfBlobFromSnap(snap) {
+      async function buildPdfBlobFromSnap(snap, fileName) {
         const htmlString = buildCleanPdfHtml(snap);
-        const canvas = await renderCanvasFromCleanHtml(htmlString);
-        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+        const h2c = resolveHtml2Canvas();
+        const JsPdfCtor = resolveJsPdfConstructor();
 
-        const JsPdfCtor =
-          (window.jspdf && window.jspdf.jsPDF) ||
-          (window.html2pdf && window.html2pdf.jsPDF) ||
-          null;
+        if (h2c && JsPdfCtor) {
+          const canvas = await renderCanvasFromCleanHtml(htmlString);
+          const imgData = canvas.toDataURL("image/jpeg", 0.92);
+          const pdf = new JsPdfCtor({ unit: "mm", format: "a4", orientation: "portrait" });
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const margin = 6;
+          const usableWidth = pageWidth - margin * 2;
+          const usableHeight = pageHeight - margin * 2;
+          const imgHeightMm = (canvas.height * usableWidth) / canvas.width;
 
-        if (!JsPdfCtor && typeof html2pdf !== "undefined") {
-          const opt = {
-            margin: 6,
-            image: { type: "jpeg", quality: 0.92 },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-          };
-          const worker = html2pdf().set(opt).from(canvas.toDataURL("image/jpeg", 0.92));
-          const dataUri = await worker.outputPdf("datauristring");
-          return {
-            base64Pdf: dataUri.split(",")[1],
-            blob: await worker.outputPdf("blob")
-          };
-        }
+          let heightLeft = imgHeightMm;
+          let position = margin;
 
-        const pdf = new JsPdfCtor({ unit: "mm", format: "a4", orientation: "portrait" });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 6;
-        const usableWidth = pageWidth - margin * 2;
-        const usableHeight = pageHeight - margin * 2;
-        const imgHeightMm = (canvas.height * usableWidth) / canvas.width;
-
-        let heightLeft = imgHeightMm;
-        let position = margin;
-
-        pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeightMm);
-        heightLeft -= usableHeight;
-
-        while (heightLeft > 0) {
-          position = margin - (imgHeightMm - heightLeft);
-          pdf.addPage();
           pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeightMm);
           heightLeft -= usableHeight;
+
+          while (heightLeft > 0) {
+            position = margin - (imgHeightMm - heightLeft);
+            pdf.addPage();
+            pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeightMm);
+            heightLeft -= usableHeight;
+          }
+
+          const pdfBlob = pdf.output("blob");
+          const dataUri = pdf.output("datauristring");
+          return {
+            blob: pdfBlob,
+            base64Pdf: dataUri.split(",")[1]
+          };
         }
 
-        const pdfBlob = pdf.output("blob");
-        const dataUri = pdf.output("datauristring");
-        return {
-          blob: pdfBlob,
-          base64Pdf: dataUri.split(",")[1]
-        };
+        if (typeof html2pdf !== "undefined") {
+          const opt = {
+            margin: 6,
+            filename: fileName,
+            image: { type: "jpeg", quality: 0.92 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 760 },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+          };
+          const worker = html2pdf().set(opt).from(htmlString, "string");
+          const dataUri = await worker.outputPdf("datauristring");
+          const blob = await worker.outputPdf("blob");
+          return {
+            blob,
+            base64Pdf: dataUri.split(",")[1]
+          };
+        }
+
+        throw new Error("Ninguna librería de PDF está disponible");
       }
 
       function triggerBlobDownload(blob, fileName) {
@@ -1588,7 +1609,7 @@
       }
 
       async function generateAndUploadPdf(snap) {
-        if (typeof html2pdf === "undefined" && typeof html2canvas === "undefined") {
+        if (typeof html2pdf === "undefined" && !resolveHtml2Canvas()) {
           showToast("No cargó html2pdf. Revisa tu conexión a internet.", "error");
           return;
         }
@@ -1598,9 +1619,9 @@
 
         let pdfData;
         try {
-          pdfData = await buildPdfBlobFromSnap(snap);
-        } catch (_) {
-          showToast("Error al renderizar el contenido del PDF.", "error");
+          pdfData = await buildPdfBlobFromSnap(snap, fileName);
+        } catch (err) {
+          showToast(`Error al renderizar el contenido del PDF: ${err && err.message ? err.message : "revise consola"}.`, "error");
           return;
         }
 
