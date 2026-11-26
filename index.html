@@ -1384,13 +1384,13 @@
           .map(
             (b) => `
             <tr>
-              <td style="padding:6px 8px; border:1px solid #cbd5e1; font-weight:700;">${escapeHtml(b.name)}</td>
-              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center;">${b.inOperation ? "En operación" : "No aplica"}</td>
-              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center; color:#047857; font-weight:700;">${b.cumple}</td>
-              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center; color:#b91c1c; font-weight:700;">${b.noCumple}</td>
-              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center;">${b.na}</td>
-              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center;">${b.pendientes}</td>
-              <td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:center; font-weight:800;">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
+              <td style="padding:5px 7px; border:1px solid #cbd5e1; font-weight:700; color:#0f172a;">${escapeHtml(b.name)}</td>
+              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#0f172a;">${b.inOperation ? "En operación" : "No aplica"}</td>
+              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#047857; font-weight:700;">${b.cumple}</td>
+              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#b91c1c; font-weight:700;">${b.noCumple}</td>
+              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#0f172a;">${b.na}</td>
+              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#0f172a;">${b.pendientes}</td>
+              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; font-weight:800; color:#1E3278;">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
             </tr>`
           )
           .join("");
@@ -1398,14 +1398,14 @@
         const allFindings = m.perBlock.flatMap((b) => b.findings);
         const findingsSection =
           allFindings.length > 0
-            ? `<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:6px;">
+            ? `<table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-top:6px;">
                 <thead>
                   <tr style="background:#b91c1c; color:#ffffff;">
-                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Bloque</th>
-                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Código</th>
-                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Ítem</th>
-                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Dato</th>
-                    <th style="padding:6px 8px; border:1px solid #991b1b; text-align:left;">Acción Correctiva</th>
+                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Bloque</th>
+                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Código</th>
+                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Ítem</th>
+                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Dato</th>
+                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Acción Correctiva</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1413,95 +1413,182 @@
                     .map(
                       (f) => `
                     <tr style="background:#fef2f2;">
-                      <td style="padding:6px 8px; border:1px solid #fecaca;">${escapeHtml(f.block)}</td>
-                      <td style="padding:6px 8px; border:1px solid #fecaca; font-weight:700;">${escapeHtml(f.code)}</td>
-                      <td style="padding:6px 8px; border:1px solid #fecaca;">${escapeHtml(f.desc)}</td>
-                      <td style="padding:6px 8px; border:1px solid #fecaca;">${escapeHtml(f.measuredValue)}</td>
-                      <td style="padding:6px 8px; border:1px solid #fecaca; font-weight:700;">${escapeHtml(f.correctiveAction)}</td>
+                      <td style="padding:5px 7px; border:1px solid #fecaca; color:#0f172a;">${escapeHtml(f.block)}</td>
+                      <td style="padding:5px 7px; border:1px solid #fecaca; font-weight:700; color:#991b1b;">${escapeHtml(f.code)}</td>
+                      <td style="padding:5px 7px; border:1px solid #fecaca; color:#0f172a;">${escapeHtml(f.desc)}</td>
+                      <td style="padding:5px 7px; border:1px solid #fecaca; color:#0f172a;">${escapeHtml(f.measuredValue)}</td>
+                      <td style="padding:5px 7px; border:1px solid #fecaca; font-weight:700; color:#7f1d1d;">${escapeHtml(f.correctiveAction)}</td>
                     </tr>`
                     )
                     .join("")}
                 </tbody>
               </table>`
-            : `<div style="font-size:11px; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:8px 10px; border-radius:6px; margin-top:6px;">Sin hallazgos críticos ("No cumple") registrados en el turno.</div>`;
+            : `<div style="font-size:10.5px; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:7px 10px; border-radius:6px; margin-top:6px;">Sin hallazgos críticos ("No cumple") registrados en el turno.</div>`;
 
         return `
-          <div style="width:740px; background:#ffffff; color:#1e293b; font-family:Arial, Helvetica, sans-serif; padding:16px; box-sizing:border-box;">
-            <div style="border-bottom:2px solid #1E3278; padding-bottom:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="width:720px; background:#ffffff; color:#0f172a; font-family:Arial, Helvetica, sans-serif; padding:14px; box-sizing:border-box;">
+            <div style="border-bottom:2px solid #1E3278; padding-bottom:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <div style="font-size:15px; font-weight:800; color:#1E3278;">COLOMBINA · REPORTE GERENCIAL DE TURNO</div>
-                <div style="font-size:11px; color:#334155; margin-top:4px;">
+                <div style="font-size:14px; font-weight:800; color:#1E3278;">COLOMBINA · REPORTE GERENCIAL DE TURNO</div>
+                <div style="font-size:10.5px; color:#334155; margin-top:3px;">
                   <b>Responsable:</b> ${escapeHtml(snap.responsable)} | <b>Fecha:</b> ${escapeHtml(snap.fecha)} | <b>Turno:</b> ${escapeHtml(snap.turno)}
                 </div>
               </div>
               <div style="text-align:right;">
-                <div style="font-size:10px; color:#64748b;">Cumplimiento Global (Meta ≥ 95%)</div>
-                <div style="font-size:20px; font-weight:800; color:#1E3278;">${m.pctGlobal.toFixed(1)}%</div>
+                <div style="font-size:9.5px; color:#475569;">Cumplimiento Global (Meta ≥ 95%)</div>
+                <div style="font-size:18px; font-weight:800; color:#1E3278;">${m.pctGlobal.toFixed(1)}%</div>
               </div>
             </div>
 
-            <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:12px;">
+            <table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:10px;">
               <tr>
-                <td style="width:50%; padding:8px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top;">
+                <td style="width:50%; padding:7px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top; color:#0f172a;">
                   <b>Seguridad:</b> ${escapeHtml(snap.incidenteSeguridad)}<br/>
                   <span style="color:#475569;">${escapeHtml(snap.seguridadExplicacion || "Sin detalles adicionales.")}</span>
                 </td>
-                <td style="width:50%; padding:8px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top;">
+                <td style="width:50%; padding:7px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top; color:#0f172a;">
                   <b>Calidad:</b> ${escapeHtml(snap.casiIncidenteCalidad)}<br/>
                   <span style="color:#475569;">${escapeHtml(snap.calidadExplicacion || "Sin detalles adicionales.")}</span>
                 </td>
               </tr>
             </table>
 
-            <div style="font-size:11px; font-weight:800; color:#1E3278; text-transform:uppercase; margin-bottom:6px;">Consolidado por Sector / Línea</div>
-            <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:14px;">
+            <div style="font-size:10.5px; font-weight:800; color:#1E3278; text-transform:uppercase; margin-bottom:5px;">Consolidado por Sector / Línea</div>
+            <table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:10px;">
               <thead>
                 <tr style="background:#1E3278; color:#ffffff;">
-                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:left;">Sector / Línea</th>
-                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">Estado Operación</th>
-                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">Cumple</th>
-                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">No Cumple</th>
-                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">N/A</th>
-                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">Pendientes</th>
-                  <th style="padding:6px 8px; border:1px solid #1E3278; text-align:center;">% Cumplimiento</th>
+                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:left;">Sector / Línea</th>
+                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">Estado Operación</th>
+                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">Cumple</th>
+                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">No Cumple</th>
+                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">N/A</th>
+                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">Pendientes</th>
+                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">% Cumplimiento</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
             </table>
 
-            <div style="font-size:11px; font-weight:800; color:#b91c1c; text-transform:uppercase;">Hallazgos Críticos (No Cumplen)</div>
+            <div style="font-size:10.5px; font-weight:800; color:#b91c1c; text-transform:uppercase;">Hallazgos Críticos (No Cumplen)</div>
             ${findingsSection}
 
-            <div style="margin-top:14px; padding-top:10px; border-top:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#0f172a;">
               <div>Verificación realizada conforme al procedimiento <b>F1345-1346</b>.</div>
-              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma" style="height:48px; border:1px solid #cbd5e1; padding:2px 6px; background:#ffffff;" />` : `<span>Sin firma registrada</span>`}
+              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma" style="height:44px; border:1px solid #cbd5e1; padding:2px 6px; background:#ffffff;" />` : `<span>Sin firma registrada</span>`}
             </div>
           </div>
         `;
       }
 
-      async function generatePdfBase64FromSnap(snap, fileName) {
-        const htmlString = buildCleanPdfHtml(snap);
-        const opt = {
-          margin: 8,
-          filename: fileName,
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: {
+      async function renderCanvasFromCleanHtml(htmlString) {
+        if (typeof html2canvas === "undefined") {
+          throw new Error("html2canvas no disponible");
+        }
+        const host = document.createElement("div");
+        host.style.position = "fixed";
+        host.style.left = "-10000px";
+        host.style.top = "0";
+        host.style.width = "720px";
+        host.style.background = "#ffffff";
+        host.style.zIndex = "-1";
+        host.innerHTML = htmlString;
+        document.body.appendChild(host);
+
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const imgs = Array.from(host.querySelectorAll("img"));
+        await Promise.all(
+          imgs.map(
+            (img) =>
+              img.complete
+                ? Promise.resolve()
+                : new Promise((res) => {
+                    img.onload = res;
+                    img.onerror = res;
+                  })
+          )
+        );
+
+        try {
+          return await html2canvas(host.firstElementChild || host, {
             scale: 2,
             useCORS: true,
             backgroundColor: "#ffffff",
+            width: 720,
+            windowWidth: 760,
             scrollX: 0,
-            scrollY: 0,
-            windowWidth: 800
-          },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+            scrollY: 0
+          });
+        } finally {
+          host.remove();
+        }
+      }
+
+      async function buildPdfBlobFromSnap(snap) {
+        const htmlString = buildCleanPdfHtml(snap);
+        const canvas = await renderCanvasFromCleanHtml(htmlString);
+        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+        const JsPdfCtor =
+          (window.jspdf && window.jspdf.jsPDF) ||
+          (window.html2pdf && window.html2pdf.jsPDF) ||
+          null;
+
+        if (!JsPdfCtor && typeof html2pdf !== "undefined") {
+          const opt = {
+            margin: 6,
+            image: { type: "jpeg", quality: 0.92 },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+          };
+          const worker = html2pdf().set(opt).from(canvas.toDataURL("image/jpeg", 0.92));
+          const dataUri = await worker.outputPdf("datauristring");
+          return {
+            base64Pdf: dataUri.split(",")[1],
+            blob: await worker.outputPdf("blob")
+          };
+        }
+
+        const pdf = new JsPdfCtor({ unit: "mm", format: "a4", orientation: "portrait" });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 6;
+        const usableWidth = pageWidth - margin * 2;
+        const usableHeight = pageHeight - margin * 2;
+        const imgHeightMm = (canvas.height * usableWidth) / canvas.width;
+
+        let heightLeft = imgHeightMm;
+        let position = margin;
+
+        pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeightMm);
+        heightLeft -= usableHeight;
+
+        while (heightLeft > 0) {
+          position = margin - (imgHeightMm - heightLeft);
+          pdf.addPage();
+          pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeightMm);
+          heightLeft -= usableHeight;
+        }
+
+        const pdfBlob = pdf.output("blob");
+        const dataUri = pdf.output("datauristring");
+        return {
+          blob: pdfBlob,
+          base64Pdf: dataUri.split(",")[1]
         };
-        const dataUri = await html2pdf().set(opt).from(htmlString, "string").outputPdf("datauristring");
-        return { dataUri, base64Pdf: dataUri.split(",")[1], opt, htmlString };
+      }
+
+      function triggerBlobDownload(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
       }
 
       async function generateAndUploadPdf(snap) {
-        if (typeof html2pdf === "undefined") {
+        if (typeof html2pdf === "undefined" && typeof html2canvas === "undefined") {
           showToast("No cargó html2pdf. Revisa tu conexión a internet.", "error");
           return;
         }
@@ -1509,10 +1596,16 @@
         const fileName = buildReportPdfFileName(snap);
         showToast("Generando PDF y subiendo a Drive...", "info");
 
-        const { base64Pdf, opt, htmlString } = await generatePdfBase64FromSnap(snap, fileName);
+        let pdfData;
+        try {
+          pdfData = await buildPdfBlobFromSnap(snap);
+        } catch (_) {
+          showToast("Error al renderizar el contenido del PDF.", "error");
+          return;
+        }
 
         if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PEGA_AQUI_TU_URL_EXEC")) {
-          await html2pdf().set(opt).from(htmlString, "string").save();
+          triggerBlobDownload(pdfData.blob, fileName);
           showToast(`Falta pegar tu URL /exec. Se descargó ${fileName} localmente.`, "warning");
           return;
         }
@@ -1521,7 +1614,7 @@
           const response = await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ fileName, base64Pdf })
+            body: JSON.stringify({ fileName, base64Pdf: pdfData.base64Pdf })
           });
           const result = await response.json();
           if (result.ok) {
@@ -1530,7 +1623,7 @@
             throw new Error(result.error || "Error al subir");
           }
         } catch (_) {
-          await html2pdf().set(opt).from(htmlString, "string").save();
+          triggerBlobDownload(pdfData.blob, fileName);
           showToast(`No se pudo subir a Drive; se descargó ${fileName}.`, "warning");
         }
       }
