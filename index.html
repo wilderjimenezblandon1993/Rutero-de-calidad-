@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Rutero de Verificación de Proceso y Calidad en Planta - Colombina</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -223,12 +224,12 @@
       <div id="bloquesContainer" class="space-y-4"></div>
     </section>
 
-    <!-- SECCIÓN 4: Indicadores en Vivo, Firma y Doble Exportación -->
+    <!-- SECCIÓN 4: Indicadores en Vivo, Firma y Envío -->
     <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
       <div class="border-b border-slate-100 pb-3">
         <h2 class="text-base sm:text-lg font-bold text-colombina-navy flex items-center gap-2">
           <span class="w-7 h-7 rounded-lg bg-colombina-navy text-white text-sm flex items-center justify-center font-bold">4</span>
-          Indicadores en Vivo, Firma y Exportación
+          Indicadores en Vivo, Firma y Envío de Documento
         </h2>
       </div>
 
@@ -283,7 +284,7 @@
         </div>
       </div>
 
-      <!-- Botones de Acción y Exportación -->
+      <!-- Botones de Acción -->
       <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
         <button id="btnGuardarHistorial" type="button" class="touch-btn bg-colombina-navy hover:bg-colombina-dark text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
           <span>💾</span>
@@ -296,9 +297,9 @@
             <span>Excel Formato Inicial (.xls)</span>
           </button>
 
-          <button id="btnReporteGerencial" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
-            <span>📈</span>
-            <span>Reporte Gerencial (Tabla)</span>
+          <button id="btnReporteGerencial" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+            <span>📤</span>
+            <span>Enviar documento</span>
           </button>
         </div>
       </div>
@@ -432,7 +433,7 @@
         setTimeout(() => {
           toast.classList.add("opacity-0", "translate-y-1");
           setTimeout(() => toast.remove(), 220);
-        }, 3200);
+        }, 3500);
       }
 
       function openModal({ title, bodyHtml, buttons = [] }) {
@@ -1204,7 +1205,7 @@
             : `<p style="font-size: 12px; color: #047857; font-weight: 600; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px; margin: 0;">Sin hallazgos críticos ("No cumple") registrados en el turno.</p>`;
 
         return `
-          <div id="printableReportArea" style="background: #ffffff; color: #1e293b; font-family: Arial, Helvetica, sans-serif; padding: 12px;">
+          <div style="background: #ffffff; color: #1e293b; font-family: Arial, Helvetica, sans-serif; padding: 4px;">
             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 14px;">
               <div>
                 <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #1E3278;">Colombina · Reporte Gerencial de Turno</div>
@@ -1231,7 +1232,7 @@
 
             <div style="margin-bottom: 14px;">
               <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #1E3278; margin: 0 0 8px 0;">Consolidado por Sector / Línea</h4>
-              <div style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+              <div style="border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
                 <table style="width: 100%; font-size: 12px; text-align: left; border-collapse: collapse;">
                   <thead style="background: #1E3278; color: #ffffff;">
                     <tr>
@@ -1264,92 +1265,6 @@
         `;
       }
 
-      function exportManagerialExcel(snap) {
-        const m = snap.metrics;
-        const sectorRows = m.perBlock
-          .map(
-            (b) => `
-            <tr>
-              <td>${escapeHtml(b.name)}</td>
-              <td>${b.inOperation ? "En operación" : "No aplica"}</td>
-              <td>${b.cumple}</td>
-              <td>${b.noCumple}</td>
-              <td>${b.na}</td>
-              <td>${b.pendientes}</td>
-              <td>${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
-            </tr>
-          `
-          )
-          .join("");
-
-        const allFindings = m.perBlock.flatMap((b) => b.findings);
-        const findingRows =
-          allFindings.length > 0
-            ? allFindings
-                .map(
-                  (f) => `
-                <tr>
-                  <td>${escapeHtml(f.block)}</td>
-                  <td>${escapeHtml(f.code)}</td>
-                  <td colspan="2">${escapeHtml(f.desc)}</td>
-                  <td>${escapeHtml(f.measuredValue)}</td>
-                  <td colspan="2">${escapeHtml(f.correctiveAction)}</td>
-                </tr>
-              `
-                )
-                .join("")
-            : `<tr><td colspan="7">Sin hallazgos críticos registrados.</td></tr>`;
-
-        const xlsHtml = `
-          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-          <head><meta charset="UTF-8"></head>
-          <body>
-            <table border="1" cellspacing="0" cellpadding="4">
-              <tr><th colspan="7" style="background:#1E3278;color:#FFFFFF;font-size:13pt;">REPORTE GERENCIAL CONSOLIDADO - COLOMBINA</th></tr>
-              <tr>
-                <td><b>Responsable</b></td><td colspan="2">${escapeHtml(snap.responsable)}</td>
-                <td><b>Fecha</b></td><td>${escapeHtml(snap.fecha)}</td>
-                <td><b>Turno</b></td><td>${escapeHtml(snap.turno)}</td>
-              </tr>
-              <tr>
-                <td><b>Seguridad</b></td><td colspan="2">${escapeHtml(snap.incidenteSeguridad)}</td>
-                <td><b>Detalle seguridad</b></td><td colspan="3">${escapeHtml(snap.seguridadExplicacion)}</td>
-              </tr>
-              <tr>
-                <td><b>Calidad</b></td><td colspan="2">${escapeHtml(snap.casiIncidenteCalidad)}</td>
-                <td><b>Detalle calidad</b></td><td colspan="3">${escapeHtml(snap.calidadExplicacion)}</td>
-              </tr>
-              <tr style="background:#1E3278;color:#FFFFFF;">
-                <th>Sector / Línea</th>
-                <th>Estado Operación</th>
-                <th>Cumple</th>
-                <th>No Cumple</th>
-                <th>N/A</th>
-                <th>Pendientes</th>
-                <th>% Cumplimiento</th>
-              </tr>
-              ${sectorRows}
-              <tr><th colspan="7" style="background:#FEE2E2;color:#991B1B;text-align:left;">HALLAZGOS CRÍTICOS (NO CUMPLEN)</th></tr>
-              <tr style="background:#991B1B;color:#FFFFFF;">
-                <th>Bloque</th>
-                <th>Código</th>
-                <th colspan="2">Descripción</th>
-                <th>Dato Medido</th>
-                <th colspan="2">Acción Correctiva</th>
-              </tr>
-              ${findingRows}
-              <tr>
-                <td colspan="7"><b>Firma Verificador de Calidad:</b> Verificación realizada conforme al procedimiento F1345-1346.</td>
-              </tr>
-            </table>
-          </body>
-          </html>
-        `;
-
-        downloadXls(`Reporte_Gerencial_${snap.fecha}_${snap.turno.replace(/\s+/g, "_")}.xls`, xlsHtml);
-        showToast("Reporte Gerencial (.xls) descargado.", "success");
-      }
-
       function getSpanishDayName(dateStr) {
         const parts = (dateStr || "").split("-");
         if (parts.length !== 3) return "Dia";
@@ -1378,223 +1293,180 @@
         return `${responsable}-${fecha}-${hora}-${dia}.pdf`;
       }
 
-      function buildCleanPdfHtml(snap) {
+      // Generación vectorial directa con jsPDF + AutoTable (sin captura de pantalla HTML/DOM)
+      function buildVectorPdfFromSnap(snap) {
+        if (!window.jspdf || typeof window.jspdf.jsPDF !== "function") {
+          throw new Error("La librería jsPDF no cargó. Verifica tu conexión a internet.");
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
         const m = snap.metrics;
-        const rows = m.perBlock
-          .map(
-            (b) => `
-            <tr>
-              <td style="padding:5px 7px; border:1px solid #cbd5e1; font-weight:700; color:#0f172a;">${escapeHtml(b.name)}</td>
-              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#0f172a;">${b.inOperation ? "En operación" : "No aplica"}</td>
-              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#047857; font-weight:700;">${b.cumple}</td>
-              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#b91c1c; font-weight:700;">${b.noCumple}</td>
-              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#0f172a;">${b.na}</td>
-              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; color:#0f172a;">${b.pendientes}</td>
-              <td style="padding:5px 7px; border:1px solid #cbd5e1; text-align:center; font-weight:800; color:#1E3278;">${b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"}</td>
-            </tr>`
-          )
-          .join("");
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 12;
+
+        // Encabezado corporativo
+        doc.setFillColor(30, 50, 120);
+        doc.rect(margin, 10, pageWidth - margin * 2, 16, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("COLOMBINA · REPORTE GERENCIAL DE TURNO", margin + 4, 17);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text("Verificación de Proceso y Calidad en Planta", margin + 4, 22.5);
+
+        // Cuadro de cumplimiento global a la derecha
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.text(`${m.pctGlobal.toFixed(1)}%`, pageWidth - margin - 4, 17.5, { align: "right" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.text("Cumplimiento (Meta >= 95%)", pageWidth - margin - 4, 22.5, { align: "right" });
+
+        // Datos de identificación y novedades
+        doc.autoTable({
+          startY: 29,
+          margin: { left: margin, right: margin },
+          theme: "grid",
+          styles: { font: "helvetica", fontSize: 8.5, cellPadding: 2.5, textColor: [30, 41, 59], lineColor: [203, 213, 225] },
+          headStyles: { fillColor: [241, 245, 249], textColor: [30, 50, 120], fontStyle: "bold" },
+          body: [
+            [
+              { content: "Responsable / Verificador:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              snap.responsable,
+              { content: "Fecha:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              snap.fecha
+            ],
+            [
+              { content: "Turno:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              snap.turno,
+              { content: "Evaluados / Aplicables:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              `${m.totalEvaluados} de ${m.totalAplicables} (${m.totalCumple} Cumplen · ${m.totalNoCumple} No Cumplen · ${m.totalNA} N/A)`
+            ],
+            [
+              { content: "Incidentes de Seguridad:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              { content: `${snap.incidenteSeguridad}${snap.seguridadExplicacion ? " — " + snap.seguridadExplicacion : ""}`, colSpan: 3 }
+            ],
+            [
+              { content: "Casi Incidentes de Calidad:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+              { content: `${snap.casiIncidenteCalidad}${snap.calidadExplicacion ? " — " + snap.calidadExplicacion : ""}`, colSpan: 3 }
+            ],
+            ...(snap.novedadesTurno
+              ? [[
+                  { content: "Novedades del Turno:", styles: { fontStyle: "bold", fillColor: [248, 250, 252] } },
+                  { content: snap.novedadesTurno, colSpan: 3 }
+                ]]
+              : [])
+          ]
+        });
+
+        // Título Tabla Consolidada
+        let currentY = doc.lastAutoTable.finalY + 6;
+        doc.setTextColor(30, 50, 120);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.text("CONSOLIDADO POR SECTOR / LÍNEA", margin, currentY);
+
+        const sectorRows = m.perBlock.map((b) => [
+          b.name,
+          b.inOperation ? "En operación" : "No aplica",
+          String(b.cumple),
+          String(b.noCumple),
+          String(b.na),
+          String(b.pendientes),
+          b.evaluados > 0 ? `${b.pctCumplimiento.toFixed(1)}%` : "N/A"
+        ]);
+
+        doc.autoTable({
+          startY: currentY + 2,
+          margin: { left: margin, right: margin },
+          theme: "grid",
+          head: [["Sector / Línea", "Estado Operación", "Cumple", "No Cumple", "N/A", "Pendientes", "% Cumplimiento"]],
+          body: sectorRows,
+          styles: { font: "helvetica", fontSize: 8, cellPadding: 2.2, textColor: [30, 41, 59], lineColor: [203, 213, 225] },
+          headStyles: { fillColor: [30, 50, 120], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+          columnStyles: {
+            0: { fontStyle: "bold", halign: "left" },
+            1: { halign: "center" },
+            2: { halign: "center", textColor: [4, 120, 87], fontStyle: "bold" },
+            3: { halign: "center", textColor: [185, 28, 28], fontStyle: "bold" },
+            4: { halign: "center" },
+            5: { halign: "center" },
+            6: { halign: "center", fontStyle: "bold", textColor: [30, 50, 120] }
+          }
+        });
+
+        // Hallazgos Críticos
+        currentY = doc.lastAutoTable.finalY + 6;
+        if (currentY > pageHeight - 45) {
+          doc.addPage();
+          currentY = 16;
+        }
+
+        doc.setTextColor(185, 28, 28);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.text("HALLAZGOS CRÍTICOS (NO CUMPLEN)", margin, currentY);
 
         const allFindings = m.perBlock.flatMap((b) => b.findings);
-        const findingsSection =
-          allFindings.length > 0
-            ? `<table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-top:6px;">
-                <thead>
-                  <tr style="background:#b91c1c; color:#ffffff;">
-                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Bloque</th>
-                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Código</th>
-                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Ítem</th>
-                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Dato</th>
-                    <th style="padding:5px 7px; border:1px solid #991b1b; text-align:left;">Acción Correctiva</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${allFindings
-                    .map(
-                      (f) => `
-                    <tr style="background:#fef2f2;">
-                      <td style="padding:5px 7px; border:1px solid #fecaca; color:#0f172a;">${escapeHtml(f.block)}</td>
-                      <td style="padding:5px 7px; border:1px solid #fecaca; font-weight:700; color:#991b1b;">${escapeHtml(f.code)}</td>
-                      <td style="padding:5px 7px; border:1px solid #fecaca; color:#0f172a;">${escapeHtml(f.desc)}</td>
-                      <td style="padding:5px 7px; border:1px solid #fecaca; color:#0f172a;">${escapeHtml(f.measuredValue)}</td>
-                      <td style="padding:5px 7px; border:1px solid #fecaca; font-weight:700; color:#7f1d1d;">${escapeHtml(f.correctiveAction)}</td>
-                    </tr>`
-                    )
-                    .join("")}
-                </tbody>
-              </table>`
-            : `<div style="font-size:10.5px; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:7px 10px; border-radius:6px; margin-top:6px;">Sin hallazgos críticos ("No cumple") registrados en el turno.</div>`;
-
-        return `
-          <div style="width:720px; background:#ffffff; color:#0f172a; font-family:Arial, Helvetica, sans-serif; padding:14px; box-sizing:border-box;">
-            <div style="border-bottom:2px solid #1E3278; padding-bottom:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-size:14px; font-weight:800; color:#1E3278;">COLOMBINA · REPORTE GERENCIAL DE TURNO</div>
-                <div style="font-size:10.5px; color:#334155; margin-top:3px;">
-                  <b>Responsable:</b> ${escapeHtml(snap.responsable)} | <b>Fecha:</b> ${escapeHtml(snap.fecha)} | <b>Turno:</b> ${escapeHtml(snap.turno)}
-                </div>
-              </div>
-              <div style="text-align:right;">
-                <div style="font-size:9.5px; color:#475569;">Cumplimiento Global (Meta ≥ 95%)</div>
-                <div style="font-size:18px; font-weight:800; color:#1E3278;">${m.pctGlobal.toFixed(1)}%</div>
-              </div>
-            </div>
-
-            <table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:10px;">
-              <tr>
-                <td style="width:50%; padding:7px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top; color:#0f172a;">
-                  <b>Seguridad:</b> ${escapeHtml(snap.incidenteSeguridad)}<br/>
-                  <span style="color:#475569;">${escapeHtml(snap.seguridadExplicacion || "Sin detalles adicionales.")}</span>
-                </td>
-                <td style="width:50%; padding:7px; border:1px solid #cbd5e1; background:#f8fafc; vertical-align:top; color:#0f172a;">
-                  <b>Calidad:</b> ${escapeHtml(snap.casiIncidenteCalidad)}<br/>
-                  <span style="color:#475569;">${escapeHtml(snap.calidadExplicacion || "Sin detalles adicionales.")}</span>
-                </td>
-              </tr>
-            </table>
-
-            <div style="font-size:10.5px; font-weight:800; color:#1E3278; text-transform:uppercase; margin-bottom:5px;">Consolidado por Sector / Línea</div>
-            <table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:10px;">
-              <thead>
-                <tr style="background:#1E3278; color:#ffffff;">
-                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:left;">Sector / Línea</th>
-                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">Estado Operación</th>
-                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">Cumple</th>
-                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">No Cumple</th>
-                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">N/A</th>
-                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">Pendientes</th>
-                  <th style="padding:5px 7px; border:1px solid #1E3278; text-align:center;">% Cumplimiento</th>
-                </tr>
-              </thead>
-              <tbody>${rows}</tbody>
-            </table>
-
-            <div style="font-size:10.5px; font-weight:800; color:#b91c1c; text-transform:uppercase;">Hallazgos Críticos (No Cumplen)</div>
-            ${findingsSection}
-
-            <div style="margin-top:10px; padding-top:8px; border-top:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#0f172a;">
-              <div>Verificación realizada conforme al procedimiento <b>F1345-1346</b>.</div>
-              ${snap.signatureDataUrl ? `<img src="${snap.signatureDataUrl}" alt="Firma" style="height:44px; border:1px solid #cbd5e1; padding:2px 6px; background:#ffffff;" />` : `<span>Sin firma registrada</span>`}
-            </div>
-          </div>
-        `;
-      }
-
-      function resolveHtml2Canvas() {
-        if (typeof html2canvas === "function") return html2canvas;
-        if (typeof window.html2canvas === "function") return window.html2canvas;
-        if (typeof html2pdf !== "undefined" && typeof html2pdf.html2canvas === "function") {
-          return html2pdf.html2canvas;
-        }
-        return null;
-      }
-
-      function resolveJsPdfConstructor() {
-        if (window.jspdf && typeof window.jspdf.jsPDF === "function") return window.jspdf.jsPDF;
-        if (typeof window.jsPDF === "function") return window.jsPDF;
-        if (typeof html2pdf !== "undefined" && typeof html2pdf.jsPDF === "function") return html2pdf.jsPDF;
-        return null;
-      }
-
-      async function renderCanvasFromCleanHtml(htmlString) {
-        const h2c = resolveHtml2Canvas();
-        if (!h2c) {
-          throw new Error("html2canvas no disponible");
-        }
-        const host = document.createElement("div");
-        host.style.position = "fixed";
-        host.style.left = "-10000px";
-        host.style.top = "0";
-        host.style.width = "720px";
-        host.style.background = "#ffffff";
-        host.style.zIndex = "-1";
-        host.innerHTML = htmlString;
-        document.body.appendChild(host);
-
-        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        const imgs = Array.from(host.querySelectorAll("img"));
-        await Promise.all(
-          imgs.map(
-            (img) =>
-              img.complete
-                ? Promise.resolve()
-                : new Promise((res) => {
-                    img.onload = res;
-                    img.onerror = res;
-                  })
-          )
-        );
-
-        try {
-          return await h2c(host.firstElementChild || host, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            width: 720,
-            windowWidth: 760,
-            scrollX: 0,
-            scrollY: 0
+        if (allFindings.length > 0) {
+          doc.autoTable({
+            startY: currentY + 2,
+            margin: { left: margin, right: margin },
+            theme: "grid",
+            head: [["Bloque", "Código", "Ítem", "Dato", "Acción Correctiva / Observación"]],
+            body: allFindings.map((f) => [f.block, f.code, f.desc, f.measuredValue, f.correctiveAction]),
+            styles: { font: "helvetica", fontSize: 8, cellPadding: 2.2, textColor: [30, 41, 59], lineColor: [254, 202, 202] },
+            headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontStyle: "bold" },
+            bodyStyles: { fillColor: [254, 242, 242] },
+            columnStyles: {
+              0: { fontStyle: "bold", cellWidth: 28 },
+              1: { fontStyle: "bold", textColor: [153, 27, 27], cellWidth: 18 },
+              3: { cellWidth: 20 }
+            }
           });
-        } finally {
-          host.remove();
+        } else {
+          doc.autoTable({
+            startY: currentY + 2,
+            margin: { left: margin, right: margin },
+            theme: "grid",
+            body: [['Sin hallazgos críticos ("No cumple") registrados en el turno.']],
+            styles: { font: "helvetica", fontSize: 8.5, cellPadding: 3, textColor: [4, 120, 87], fillColor: [236, 253, 245], lineColor: [167, 243, 208], fontStyle: "bold" }
+          });
         }
-      }
 
-      async function buildPdfBlobFromSnap(snap, fileName) {
-        const htmlString = buildCleanPdfHtml(snap);
-        const h2c = resolveHtml2Canvas();
-        const JsPdfCtor = resolveJsPdfConstructor();
+        // Pie con nota de procedimiento F1345-1346 y firma
+        let footerY = doc.lastAutoTable.finalY + 8;
+        if (footerY > pageHeight - 28) {
+          doc.addPage();
+          footerY = 18;
+        }
 
-        if (h2c && JsPdfCtor) {
-          const canvas = await renderCanvasFromCleanHtml(htmlString);
-          const imgData = canvas.toDataURL("image/jpeg", 0.92);
-          const pdf = new JsPdfCtor({ unit: "mm", format: "a4", orientation: "portrait" });
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const margin = 6;
-          const usableWidth = pageWidth - margin * 2;
-          const usableHeight = pageHeight - margin * 2;
-          const imgHeightMm = (canvas.height * usableWidth) / canvas.width;
+        doc.setDrawColor(203, 213, 225);
+        doc.line(margin, footerY, pageWidth - margin, footerY);
 
-          let heightLeft = imgHeightMm;
-          let position = margin;
+        doc.setTextColor(51, 65, 85);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text("Verificación realizada conforme al procedimiento F1345-1346.", margin, footerY + 7);
 
-          pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeightMm);
-          heightLeft -= usableHeight;
-
-          while (heightLeft > 0) {
-            position = margin - (imgHeightMm - heightLeft);
-            pdf.addPage();
-            pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeightMm);
-            heightLeft -= usableHeight;
+        if (snap.signatureDataUrl && snap.signatureDataUrl.startsWith("data:image/")) {
+          try {
+            doc.addImage(snap.signatureDataUrl, "PNG", pageWidth - margin - 46, footerY + 2, 44, 16);
+          } catch (_) {
+            doc.text("Firma digital registrada.", pageWidth - margin, footerY + 7, { align: "right" });
           }
-
-          const pdfBlob = pdf.output("blob");
-          const dataUri = pdf.output("datauristring");
-          return {
-            blob: pdfBlob,
-            base64Pdf: dataUri.split(",")[1]
-          };
+        } else {
+          doc.setTextColor(148, 163, 184);
+          doc.text("Sin firma registrada", pageWidth - margin, footerY + 7, { align: "right" });
         }
 
-        if (typeof html2pdf !== "undefined") {
-          const opt = {
-            margin: 6,
-            filename: fileName,
-            image: { type: "jpeg", quality: 0.92 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 760 },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-          };
-          const worker = html2pdf().set(opt).from(htmlString, "string");
-          const dataUri = await worker.outputPdf("datauristring");
-          const blob = await worker.outputPdf("blob");
-          return {
-            blob,
-            base64Pdf: dataUri.split(",")[1]
-          };
-        }
-
-        throw new Error("Ninguna librería de PDF está disponible");
+        const blob = doc.output("blob");
+        const dataUri = doc.output("datauristring");
+        const base64Pdf = dataUri.includes(",") ? dataUri.split(",")[1] : "";
+        return { blob, base64Pdf };
       }
 
       function triggerBlobDownload(blob, fileName) {
@@ -1609,25 +1481,20 @@
       }
 
       async function generateAndUploadPdf(snap) {
-        if (typeof html2pdf === "undefined" && !resolveHtml2Canvas()) {
-          showToast("No cargó html2pdf. Revisa tu conexión a internet.", "error");
-          return;
-        }
-
         const fileName = buildReportPdfFileName(snap);
-        showToast("Generando PDF y subiendo a Drive...", "info");
+        showToast("Generando PDF y enviando a Drive...", "info");
 
         let pdfData;
         try {
-          pdfData = await buildPdfBlobFromSnap(snap, fileName);
+          pdfData = buildVectorPdfFromSnap(snap);
         } catch (err) {
-          showToast(`Error al renderizar el contenido del PDF: ${err && err.message ? err.message : "revise consola"}.`, "error");
+          showToast(`No se pudo generar el PDF: ${err && err.message ? err.message : "error interno"}.`, "error");
           return;
         }
 
         if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PEGA_AQUI_TU_URL_EXEC")) {
           triggerBlobDownload(pdfData.blob, fileName);
-          showToast(`Falta pegar tu URL /exec. Se descargó ${fileName} localmente.`, "warning");
+          showToast(`Falta configurar APPS_SCRIPT_URL. Se descargó ${fileName} localmente.`, "warning");
           return;
         }
 
@@ -1639,13 +1506,13 @@
           });
           const result = await response.json();
           if (result.ok) {
-            showToast(`Guardado en Drive: ${fileName}`, "success");
+            showToast(`Documento enviado a Drive: ${fileName}`, "success");
           } else {
-            throw new Error(result.error || "Error al subir");
+            throw new Error(result.error || "Error al guardar en Drive");
           }
         } catch (_) {
           triggerBlobDownload(pdfData.blob, fileName);
-          showToast(`No se pudo subir a Drive; se descargó ${fileName}.`, "warning");
+          showToast(`No se pudo conectar a Drive; se descargó ${fileName} en el equipo.`, "warning");
         }
       }
 
@@ -1661,32 +1528,6 @@
               className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white",
               closeOnClick: false,
               onClick: () => generateAndUploadPdf(snap)
-            },
-            {
-              label: "Descargar Excel (.xls)",
-              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white",
-              closeOnClick: false,
-              onClick: () => exportManagerialExcel(snap)
-            },
-            {
-              label: "Imprimir / PDF",
-              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-colombina-navy hover:bg-colombina-dark text-white",
-              closeOnClick: false,
-              onClick: () => {
-                const area = document.getElementById("printableReportArea");
-                const win = window.open("", "_blank", "width=900,height=700");
-                if (win && area) {
-                  win.document.write(`
-                    <!DOCTYPE html>
-                    <html><head><title>Reporte Gerencial</title></head>
-                    <body style="padding:20px;background:#ffffff;font-family:Arial,sans-serif;">${area.outerHTML}</body></html>
-                  `);
-                  win.document.close();
-                  setTimeout(() => win.print(), 350);
-                } else {
-                  window.print();
-                }
-              }
             },
             {
               label: "Cerrar",
@@ -1800,7 +1641,6 @@
         });
 
         document.getElementById("btnHistorial").addEventListener("click", openHistoryModal);
-        document.getElementById("btnExportExcelInicial").addEventListener("click", exportInitialExcel);
         document.getElementById("btnReporteGerencial").addEventListener("click", openManagerialReportModal);
 
         document.getElementById("btnNuevoTurno").addEventListener("click", () => {
