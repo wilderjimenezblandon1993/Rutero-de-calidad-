@@ -1356,8 +1356,40 @@
         return `${responsable}-${fecha}-${hora}-${dia}.pdf`;
       }
 
-      // Generación vectorial directa con jsPDF + AutoTable (sin captura de pantalla HTML/DOM)
-      function buildVectorPdfFromSnap(snap) {
+      // Helper para cargar imagen y obtener dimensiones naturales sin deformar
+      function loadImageInfo(dataUrl) {
+        return new Promise((resolve) => {
+          if (!dataUrl || !dataUrl.startsWith("data:image/")) {
+            resolve(null);
+            return;
+          }
+          const img = new Image();
+          img.onload = () => {
+            const w = img.naturalWidth || img.width || 1;
+            const h = img.naturalHeight || img.height || 1;
+            const format = dataUrl.includes("image/png") ? "PNG" : "JPEG";
+            resolve({ dataUrl, width: w, height: h, format });
+          };
+          img.onerror = () => resolve(null);
+          img.src = dataUrl;
+        });
+      }
+
+      // Calcula dimensiones máximas (hasta 80mm x 80mm = 8cm x 8cm) manteniendo relación de aspecto
+      function fitImageAspectRatio(natW, natH, maxWmm = 80, maxHmm = 80) {
+        if (!natW || !natH) return { drawW: maxWmm, drawH: maxHmm };
+        const ratio = natW / natH;
+        let drawW = maxWmm;
+        let drawH = drawW / ratio;
+        if (drawH > maxHmm) {
+          drawH = maxHmm;
+          drawW = drawH * ratio;
+        }
+        return { drawW, drawH };
+      }
+
+      // Generación vectorial con jsPDF + AutoTable, separando el anexo fotográfico en página aparte
+      async function buildVectorPdfFromSnap(snap) {
         if (!window.jspdf || typeof window.jspdf.jsPDF !== "function") {
           throw new Error("La librería jsPDF no cargó. Verifica tu conexión a internet.");
         }
@@ -1425,7 +1457,7 @@
           ]
         });
 
-        // Título Tabla Consolidada
+        // Consolidado por Sector / Línea
         let currentY = doc.lastAutoTable.finalY + 6;
         doc.setTextColor(30, 50, 120);
         doc.setFont("helvetica", "bold");
@@ -1500,79 +1532,7 @@
           });
         }
 
-        // Tabla de Evidencias Fotográficas (8cm x 8cm = 80mm x 80mm)
-        currentY = doc.lastAutoTable.finalY + 6;
-        if (currentY > pageHeight - 45) {
-          doc.addPage();
-          currentY = 16;
-        }
-
-        doc.setTextColor(30, 50, 120);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9.5);
-        doc.text("EVIDENCIAS FOTOGRÁFICAS (8CM X 8CM)", margin, currentY);
-
-        const allPhotos = collectEvidencePhotos();
-        if (allPhotos.length > 0) {
-          const photoSizeMm = 80; // 8cm x 8cm
-          const photoRows = allPhotos.map((p) => [
-            `${p.block}\n${p.code}\nEstado: ${p.status} (${p.time})`,
-            `Ítem: ${p.desc}\nDato: ${p.measuredValue}\nAcción / Obs.: ${p.correctiveAction}`,
-            ""
-          ]);
-
-          doc.autoTable({
-            startY: currentY + 2,
-            margin: { left: margin, right: margin },
-            theme: "grid",
-            head: [["Bloque / Código", "Detalle del Ítem", "Evidencia (8cm x 8cm)"]],
-            body: photoRows,
-            styles: {
-              font: "helvetica",
-              fontSize: 8,
-              cellPadding: 2.5,
-              textColor: [30, 41, 59],
-              lineColor: [203, 213, 225],
-              minCellHeight: photoSizeMm + 6,
-              valign: "middle"
-            },
-            headStyles: {
-              fillColor: [30, 50, 120],
-              textColor: [255, 255, 255],
-              fontStyle: "bold",
-              halign: "center",
-              minCellHeight: 8
-            },
-            columnStyles: {
-              0: { cellWidth: 42, fontStyle: "bold" },
-              1: { cellWidth: pageWidth - margin * 2 - 42 - (photoSizeMm + 6) },
-              2: { cellWidth: photoSizeMm + 6, halign: "center" }
-            },
-            didDrawCell: (data) => {
-              if (data.section === "body" && data.column.index === 2) {
-                const photoItem = allPhotos[data.row.index];
-                if (photoItem && photoItem.photoDataUrl && photoItem.photoDataUrl.startsWith("data:image/")) {
-                  try {
-                    const fmt = photoItem.photoDataUrl.includes("image/png") ? "PNG" : "JPEG";
-                    const xPos = data.cell.x + (data.cell.width - photoSizeMm) / 2;
-                    const yPos = data.cell.y + (data.cell.height - photoSizeMm) / 2;
-                    doc.addImage(photoItem.photoDataUrl, fmt, xPos, yPos, photoSizeMm, photoSizeMm);
-                  } catch (_) {}
-                }
-              }
-            }
-          });
-        } else {
-          doc.autoTable({
-            startY: currentY + 2,
-            margin: { left: margin, right: margin },
-            theme: "grid",
-            body: [["Sin fotografías de evidencia adjuntas en el turno."]],
-            styles: { font: "helvetica", fontSize: 8.5, cellPadding: 3, textColor: [100, 116, 139], fillColor: [248, 250, 252], lineColor: [203, 213, 225] }
-          });
-        }
-
-        // Pie con nota de procedimiento F1345-1346 y firma
+        // Cierre del informe principal: nota de procedimiento F1345-1346 y firma
         let footerY = doc.lastAutoTable.finalY + 8;
         if (footerY > pageHeight - 28) {
           doc.addPage();
@@ -1598,6 +1558,73 @@
           doc.text("Sin firma registrada", pageWidth - margin, footerY + 7, { align: "right" });
         }
 
+        // Anexo de Evidencias Fotográficas en página aparte
+        const allPhotos = collectEvidencePhotos();
+        if (allPhotos.length > 0) {
+          doc.addPage();
+
+          doc.setFillColor(30, 50, 120);
+          doc.rect(margin, 10, pageWidth - margin * 2, 13, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          doc.text("ANEXO DE EVIDENCIAS FOTOGRÁFICAS (MAX. 8CM X 8CM)", margin + 4, 18);
+
+          const loadedPhotos = await Promise.all(allPhotos.map((p) => loadImageInfo(p.photoDataUrl)));
+          const maxBoxMm = 80; // 8cm x 8cm límite máximo sin deformar
+          const cellPadMm = 4;
+          const photoColWidth = maxBoxMm + cellPadMm * 2;
+          const descColWidth = pageWidth - margin * 2 - 42 - photoColWidth;
+
+          const photoRows = allPhotos.map((p) => [
+            `${p.block}\n${p.code}\nEstado: ${p.status}\nHora: ${p.time}`,
+            `Ítem: ${p.desc}\nDato: ${p.measuredValue}\nAcción / Obs.: ${p.correctiveAction}`,
+            ""
+          ]);
+
+          doc.autoTable({
+            startY: 26,
+            margin: { left: margin, right: margin },
+            theme: "grid",
+            head: [["Bloque / Código", "Detalle del Ítem", "Evidencia Fotográfica"]],
+            body: photoRows,
+            styles: {
+              font: "helvetica",
+              fontSize: 8,
+              cellPadding: 2.5,
+              textColor: [30, 41, 59],
+              lineColor: [203, 213, 225],
+              minCellHeight: maxBoxMm + cellPadMm * 2,
+              valign: "middle"
+            },
+            headStyles: {
+              fillColor: [30, 50, 120],
+              textColor: [255, 255, 255],
+              fontStyle: "bold",
+              halign: "center",
+              minCellHeight: 8
+            },
+            columnStyles: {
+              0: { cellWidth: 42, fontStyle: "bold" },
+              1: { cellWidth: descColWidth },
+              2: { cellWidth: photoColWidth, halign: "center" }
+            },
+            didDrawCell: (data) => {
+              if (data.section === "body" && data.column.index === 2) {
+                const info = loadedPhotos[data.row.index];
+                if (info && info.dataUrl) {
+                  try {
+                    const { drawW, drawH } = fitImageAspectRatio(info.width, info.height, maxBoxMm, maxBoxMm);
+                    const xPos = data.cell.x + (data.cell.width - drawW) / 2;
+                    const yPos = data.cell.y + (data.cell.height - drawH) / 2;
+                    doc.addImage(info.dataUrl, info.format, xPos, yPos, drawW, drawH);
+                  } catch (_) {}
+                }
+              }
+            }
+          });
+        }
+
         const blob = doc.output("blob");
         const dataUri = doc.output("datauristring");
         const base64Pdf = dataUri.includes(",") ? dataUri.split(",")[1] : "";
@@ -1621,7 +1648,7 @@
 
         let pdfData;
         try {
-          pdfData = buildVectorPdfFromSnap(snap);
+          pdfData = await buildVectorPdfFromSnap(snap);
         } catch (err) {
           showToast(`No se pudo generar el PDF: ${err && err.message ? err.message : "error interno"}.`, "error");
           return;
