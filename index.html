@@ -1374,6 +1374,27 @@
         return `${responsable}-${fecha}-${hora}-${dia}.pdf`;
       }
 
+      async function renderReportToPdfWorker(reportEl, fileName) {
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const rect = reportEl.getBoundingClientRect();
+        const opt = {
+          margin: 8,
+          filename: fileName,
+          image: { type: "jpeg", quality: 0.92 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            windowWidth: Math.max(850, Math.ceil(rect.width || 850)),
+            windowHeight: Math.max(600, Math.ceil(reportEl.scrollHeight || 600)),
+            scrollX: 0,
+            scrollY: 0
+          },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        };
+        return html2pdf().set(opt).from(reportEl);
+      }
+
       async function generateAndUploadPdf(snap) {
         const reportEl = document.getElementById("printableReportArea");
         if (!reportEl) {
@@ -1388,19 +1409,13 @@
         const fileName = buildReportPdfFileName(snap);
         showToast("Generando PDF y subiendo a Drive...", "info");
 
-        const opt = {
-          margin: 8,
-          filename: fileName,
-          image: { type: "jpeg", quality: 0.92 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-        };
-
-        const dataUri = await html2pdf().set(opt).from(reportEl).outputPdf("datauristring");
+        const worker = await renderReportToPdfWorker(reportEl, fileName);
+        const dataUri = await worker.outputPdf("datauristring");
         const base64Pdf = dataUri.split(",")[1];
 
         if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PEGA_AQUI_TU_URL_EXEC")) {
-          await html2pdf().set(opt).from(reportEl).save();
+          const fallbackWorker = await renderReportToPdfWorker(reportEl, fileName);
+          await fallbackWorker.save();
           showToast(`Falta pegar tu URL /exec. Se descargó ${fileName} localmente.`, "warning");
           return;
         }
@@ -1418,7 +1433,8 @@
             throw new Error(result.error || "Error al subir");
           }
         } catch (_) {
-          await html2pdf().set(opt).from(reportEl).save();
+          const fallbackWorker = await renderReportToPdfWorker(reportEl, fileName);
+          await fallbackWorker.save();
           showToast(`No se pudo subir a Drive; se descargó ${fileName}.`, "warning");
         }
       }
