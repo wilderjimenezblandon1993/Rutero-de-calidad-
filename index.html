@@ -83,6 +83,14 @@
           </p>
         </div>
       </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnHistorial" type="button" class="touch-btn bg-white/15 hover:bg-white/25 text-white border border-white/25 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
+          <span>🕒</span>
+          <span>Historial</span>
+          <span id="historialBadge" class="bg-colombina-gold text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -273,17 +281,24 @@
         </div>
       </div>
 
-      <!-- Nuevos Botones Únicos de la App -->
-      <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-        <button id="btnCrearInformeRutero" type="button" class="touch-btn bg-colombina-navy hover:bg-colombina-dark text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
-          <span>📄</span>
-          <span>Crear informe rutero</span>
+      <!-- Botones de Acción -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <button id="btnGuardarTemporal" type="button" class="touch-btn bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+          <span>💾</span>
+          <span>Guardar avance</span>
         </button>
 
-        <button id="btnEnviar" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
-          <span>📤</span>
-          <span>Enviar</span>
-        </button>
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="btnCrearInformeRutero" type="button" class="touch-btn bg-colombina-navy hover:bg-colombina-dark text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+            <span>📄</span>
+            <span>Crear informe rutero</span>
+          </button>
+
+          <button id="btnEnviar" type="button" class="touch-btn bg-colombina-red hover:bg-red-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-xs flex items-center gap-2 transition">
+            <span>📤</span>
+            <span>Enviar</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -293,6 +308,7 @@
     (function () {
       "use strict";
 
+      const TEMP_HISTORY_KEY = "colombina_rutero_avances_temporales_v1";
       const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwU8Y3jYaKIzkCO2jrH4tzndfT1c32wR4-jf_QRqx2GYDfaQwnWazfW7niVganeuMNDvQ/exec";
 
       const BLOCKS_CONFIG = [
@@ -365,6 +381,8 @@
       const state = {
         blocks: {}
       };
+
+      let hasSignature = false;
 
       function getTodayISO() {
         const now = new Date();
@@ -945,7 +963,6 @@
       }
 
       // Signature Canvas Setup
-      let hasSignature = false;
       function setupSignatureCanvas() {
         const canvas = document.getElementById("signatureCanvas");
         const ctx = canvas.getContext("2d");
@@ -1018,6 +1035,7 @@
         const m = computeMetrics();
         const sigCanvas = document.getElementById("signatureCanvas");
         return {
+          id: `av_${Date.now()}`,
           savedAt: new Date().toLocaleString("es-CO"),
           responsable: document.getElementById("responsableSelect").value || "Sin asignar",
           fecha: document.getElementById("fechaInput").value || getTodayISO(),
@@ -1031,6 +1049,164 @@
           metrics: m,
           blocks: JSON.parse(JSON.stringify(state.blocks))
         };
+      }
+
+      function getTempHistory() {
+        try {
+          return JSON.parse(localStorage.getItem(TEMP_HISTORY_KEY) || "[]");
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function saveTempHistory(list) {
+        try {
+          localStorage.setItem(TEMP_HISTORY_KEY, JSON.stringify(list));
+          updateTempHistoryBadge();
+          return true;
+        } catch (_) {
+          showToast("No se pudo guardar temporalmente (espacio lleno en el dispositivo).", "error");
+          return false;
+        }
+      }
+
+      function updateTempHistoryBadge() {
+        const badge = document.getElementById("historialBadge");
+        if (badge) {
+          badge.textContent = String(getTempHistory().length);
+        }
+      }
+
+      function resetFormFields() {
+        document.getElementById("responsableSelect").value = "";
+        document.getElementById("fechaInput").value = getTodayISO();
+        document.getElementById("turnoSelect").value = "Turno 1 (Nocturno)";
+        document.getElementById("incidenteSeguridadSelect").value = "Sin novedad";
+        document.getElementById("seguridadExplicacionInput").value = "";
+        document.getElementById("casiIncidenteCalidadSelect").value = "Sin novedad";
+        document.getElementById("calidadExplicacionInput").value = "";
+        document.getElementById("novedadesTurnoInput").value = "";
+
+        const sigCanvas = document.getElementById("signatureCanvas");
+        const ctx = sigCanvas.getContext("2d");
+        const rect = sigCanvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        hasSignature = false;
+
+        initState();
+        syncIncidentStyles();
+        renderBlocks();
+      }
+
+      function loadTempAdvance(entry) {
+        if (!entry) return;
+        document.getElementById("responsableSelect").value = entry.responsable === "Sin asignar" ? "" : entry.responsable;
+        document.getElementById("fechaInput").value = entry.fecha || getTodayISO();
+        document.getElementById("turnoSelect").value = entry.turno || "Turno 1 (Nocturno)";
+        document.getElementById("incidenteSeguridadSelect").value = entry.incidenteSeguridad || "Sin novedad";
+        document.getElementById("seguridadExplicacionInput").value = entry.seguridadExplicacion || "";
+        document.getElementById("casiIncidenteCalidadSelect").value = entry.casiIncidenteCalidad || "Sin novedad";
+        document.getElementById("calidadExplicacionInput").value = entry.calidadExplicacion || "";
+        document.getElementById("novedadesTurnoInput").value = entry.novedadesTurno || "";
+
+        BLOCKS_CONFIG.forEach((block) => {
+          const savedBlock = entry.blocks && entry.blocks[block.id];
+          if (savedBlock) {
+            state.blocks[block.id].active = block.alwaysActive ? true : Boolean(savedBlock.active);
+            block.items.forEach((item) => {
+              const savedItem = savedBlock.items && savedBlock.items[item.code];
+              state.blocks[block.id].items[item.code] = savedItem
+                ? { ...savedItem }
+                : { status: state.blocks[block.id].active ? "" : "na", time: "", measuredValue: "", photoDataUrl: "", correctiveAction: "" };
+            });
+          }
+        });
+
+        const sigCanvas = document.getElementById("signatureCanvas");
+        const ctx = sigCanvas.getContext("2d");
+        const rect = sigCanvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        hasSignature = false;
+        if (entry.signatureDataUrl) {
+          const img = new Image();
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, rect.width, rect.height);
+            hasSignature = true;
+          };
+          img.src = entry.signatureDataUrl;
+        }
+
+        syncIncidentStyles();
+        renderBlocks();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        showToast("Avance cargado para continuar diligenciando.", "success");
+      }
+
+      function handleGuardarAvanceTemporal() {
+        const snap = collectSnapshot();
+        const list = getTempHistory();
+        list.unshift(snap);
+        if (!saveTempHistory(list.slice(0, 30))) return;
+
+        resetFormFields();
+        showToast("Avance guardado temporalmente. Página minimizada para nuevo registro.", "success");
+      }
+
+      function openTempHistoryModal() {
+        const list = getTempHistory();
+        const bodyHtml =
+          list.length === 0
+            ? `<p class="text-sm text-slate-500 text-center py-6">No hay avances guardados temporalmente en este dispositivo.</p>`
+            : `<div class="space-y-2.5">
+                ${list
+                  .map(
+                    (entry) => `
+                  <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div class="text-xs font-extrabold text-colombina-navy">${escapeHtml(entry.fecha)} · ${escapeHtml(entry.turno)}</div>
+                      <div class="text-xs font-semibold text-slate-700">${escapeHtml(entry.responsable)}</div>
+                      <div class="text-[11px] text-slate-500">Evaluados: <b>${entry.metrics.totalEvaluados}</b> · Cumplen: <b>${entry.metrics.pctGlobal.toFixed(1)}%</b> · Guardado: ${escapeHtml(entry.savedAt)}</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" data-load-id="${entry.id}" class="temp-load-btn touch-btn px-3 py-1.5 rounded-lg bg-colombina-navy text-white text-xs font-bold">Cargar</button>
+                      <button type="button" data-del-id="${entry.id}" class="temp-del-btn touch-btn px-2.5 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-xs font-bold">Eliminar</button>
+                    </div>
+                  </div>
+                `
+                  )
+                  .join("")}
+              </div>`;
+
+        openModal({
+          title: "Historial de Avances Temporales",
+          bodyHtml,
+          buttons: [
+            {
+              label: "Cerrar",
+              className: "touch-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 hover:bg-slate-300 text-slate-800"
+            }
+          ]
+        });
+
+        document.querySelectorAll(".temp-load-btn").forEach((b) => {
+          b.addEventListener("click", () => {
+            const found = getTempHistory().find((x) => x.id === b.dataset.loadId);
+            if (found) {
+              closeModal();
+              loadTempAdvance(found);
+            }
+          });
+        });
+
+        document.querySelectorAll(".temp-del-btn").forEach((b) => {
+          b.addEventListener("click", () => {
+            const filtered = getTempHistory().filter((x) => x.id !== b.dataset.delId);
+            saveTempHistory(filtered);
+            closeModal();
+            openTempHistoryModal();
+            showToast("Avance eliminado del historial temporal.", "info");
+          });
+        });
       }
 
       function statusLabel(st) {
@@ -1098,8 +1274,8 @@
       function sanitizeFilePart(value) {
         return String(value || "")
           .normalize("NFD")
-          .replace(/[̀-ͯ]/g, "")
-          .replace(/[\/:*?"<>|]+/g, "-")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[\\/:*?"<>|]+/g, "-")
           .replace(/\s+/g, " ")
           .trim();
       }
@@ -1212,12 +1388,8 @@
         const descColWidth = pageWidth - margin * 2 - 42 - photoColWidth;
 
         const photoRows = allPhotos.map((p) => [
-          `${p.block}
-${p.code}
-Estado: ${p.status}
-Hora: ${p.time}`,
-          `Ítem: ${p.desc}
-Acción / Observación: ${p.correctiveAction}`,
+          `${p.block}\n${p.code}\nEstado: ${p.status}\nHora: ${p.time}`,
+          `Ítem: ${p.desc}\nAcción / Observación: ${p.correctiveAction}`,
           ""
         ]);
 
@@ -1266,7 +1438,6 @@ Acción / Observación: ${p.correctiveAction}`,
         appendSignatureBox(doc, snap, doc.lastAutoTable.finalY + 7);
       }
 
-      // 1) Informe Gerencial para enviar a la carpeta de Drive
       async function buildManagerialPdfForDrive(snap) {
         if (!window.jspdf || typeof window.jspdf.jsPDF !== "function") {
           throw new Error("La librería jsPDF no cargó. Verifica tu conexión a internet.");
@@ -1414,7 +1585,6 @@ Acción / Observación: ${p.correctiveAction}`,
         return { blob, base64Pdf };
       }
 
-      // 2) Informe detallado del rutero para descargar en el dispositivo
       async function buildDetailedRuteroPdfForDevice(snap) {
         if (!window.jspdf || typeof window.jspdf.jsPDF !== "function") {
           throw new Error("La librería jsPDF no cargó. Verifica tu conexión a internet.");
@@ -1585,6 +1755,7 @@ Acción / Observación: ${p.correctiveAction}`,
         initState();
         renderBlocks();
         setupSignatureCanvas();
+        updateTempHistoryBadge();
 
         document.getElementById("customModalCloseBtn").addEventListener("click", closeModal);
         document.getElementById("customModal").addEventListener("click", (e) => {
@@ -1594,6 +1765,8 @@ Acción / Observación: ${p.correctiveAction}`,
         document.getElementById("incidenteSeguridadSelect").addEventListener("change", syncIncidentStyles);
         document.getElementById("seguridadExplicacionInput").addEventListener("input", syncIncidentStyles);
 
+        document.getElementById("btnGuardarTemporal").addEventListener("click", handleGuardarAvanceTemporal);
+        document.getElementById("btnHistorial").addEventListener("click", openTempHistoryModal);
         document.getElementById("btnEnviar").addEventListener("click", handleEnviarClick);
         document.getElementById("btnCrearInformeRutero").addEventListener("click", handleCrearInformeRuteroClick);
       });
